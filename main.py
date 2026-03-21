@@ -60,7 +60,7 @@ if __name__ == "__main__":
         send_message("בוקר טוב עוזי 🌅\nלא נמצאו חדשות חדשות היום בעולם הקרוזים.")
     else:
         print(f"[main] Sending {len(new_items)} items to AI...")
-        digest_text = summarize(new_items)
+        digest_text = summarize(new_items[:25])
 
         save_digest(new_items, digest_text)
 
