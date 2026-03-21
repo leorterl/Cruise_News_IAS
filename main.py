@@ -35,15 +35,29 @@ def mark_seen(seen: dict, new_items: list) -> dict:
 
 
 def save_digest(raw_items: list, ai_summary: str):
-    """Save today's digest to digest.json for the dashboard."""
+    """
+    Save digest as both digest.json (latest) and digest-YYYY-MM-DD.json (history).
+    The dashboard sidebar uses the dated files to show past days.
+    """
+    today = str(date.today())
     digest = {
-        "date": str(date.today()),
+        "date": today,
         "summary": ai_summary,
         "items": raw_items
     }
+    payload = json.dumps(digest, ensure_ascii=False, indent=2)
+
+    # Always overwrite the "latest" file
     with open(DIGEST_FILE, "w", encoding="utf-8") as f:
-        json.dump(digest, f, ensure_ascii=False, indent=2)
-    print(f"[main] Saved digest.json with {len(raw_items)} items.")
+        f.write(payload)
+
+    # Also save a dated copy for history (never overwritten)
+    dated_file = f"digest-{today}.json"
+    if not os.path.exists(dated_file):
+        with open(dated_file, "w", encoding="utf-8") as f:
+            f.write(payload)
+
+    print(f"[main] Saved {DIGEST_FILE} and {dated_file} ({len(raw_items)} items).")
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
@@ -59,7 +73,7 @@ if __name__ == "__main__":
         save_digest([], "לא נמצאו חדשות חדשות היום.")
         send_message("בוקר טוב עוזי 🌅\nלא נמצאו חדשות חדשות היום בעולם הקרוזים.")
     else:
-        print(f"[main] Sending {len(new_items)} items to AI...")
+        print(f"[main] Sending {len(new_items[:25])} items to AI...")
         digest_text = summarize(new_items[:25])
 
         save_digest(new_items, digest_text)
