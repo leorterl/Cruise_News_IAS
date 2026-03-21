@@ -447,10 +447,16 @@ async function loadAndRender(iso) {
   const parts = fullDate(digest.date).split(' ');
   dateEl.innerHTML = `${parts[0]} <span>${parts.slice(1).join(' ')}</span>`;
   currentStories = parseStories(digest.summary, digest.items || []);
+  // Sort stories so those sourced from higher-priority sites appear first
+  currentStories.sort((a, b) => {
+    const pa = Math.min(...(a.related.map(priorityOf).concat([SOURCE_PRIORITY.length])));
+    const pb = Math.min(...(b.related.map(priorityOf).concat([SOURCE_PRIORITY.length])));
+    return pa - pb;
+  });
   countEl.textContent = `${currentStories.length} סיפורים`;
 
-  // Populate sources tab with all raw items from digest
-  renderSources(digest.items || []);
+  // Populate sources tab with all raw items from digest, sorted by priority
+  renderSources(sortByPriority(digest.items || []));
   if (!currentStories.length) { container.innerHTML = `<div class="empty"><h3>לא נמצאו חדשות</h3><p>נסה תאריך אחר.</p></div>`; return; }
 
   // Per-card site state
@@ -765,6 +771,49 @@ function initTheme() {
     document.body.classList.add('light');
     document.getElementById('theme-toggle').textContent = '🌙';
   }
+}
+
+// ── Source priority ───────────────────────────────────────────────────────────
+const SOURCE_PRIORITY = [
+  "royalcaribbeanpresscenter.com",
+  "celebritycruisespresscenter.com",
+  "breakingtravelnews.com",
+  "thepointsguy.com",
+  "mscpressarea.com",
+  "cruiseindustrynews.com",
+  "cruisefever.net",
+  "travelandtourworld.com",
+  "nclhltd.com",
+  "carnivalcorp.com",
+  "carnival-news.com",
+  "royalcaribbeangroup.com",
+  "royalcaribbeanblog.com",
+  "ncl.com",
+  "travelpulse.com",
+  "hollandamerica.com",
+  "travelweekly.com",
+  "usatoday.com",
+  "oceaniacruises.com",
+  "disneyexperiences.com",
+  "cunard.com",
+  "pocruises.com",
+  "rssc.com",
+  "seabourn.com",
+  "crystalcruises.com",
+  "windstarcruises.com",
+  "princess.com",
+];
+
+function priorityOf(item) {
+  try {
+    const host = new URL(item.link).hostname.replace(/^www\./, '');
+    const idx = SOURCE_PRIORITY.findIndex(s => host.includes(s) || s.includes(host));
+    return idx === -1 ? SOURCE_PRIORITY.length : idx;
+  } catch { return SOURCE_PRIORITY.length; }
+}
+
+function sortByPriority(items) {
+  return [...items].sort((a, b) => priorityOf(a) - priorityOf(b));
 }
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
