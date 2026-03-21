@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>דיגסט קרוזים | לוח בקרה</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@300;400;700;900&family=Heebo:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:     #1a1714;
+    --paper:   #f5f0e8;
+    --cream:   #ede7d9;
+    --rule:    #c8b89a;
+    --accent:  #1a4a6b;
+    --accent2: #8b2635;
+    --muted:   #6b6259;
+    --white:   #ffffff;
+    --radius:  4px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Heebo', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── Masthead ── */
+  .masthead {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 0 48px;
+    border-bottom: 3px solid var(--accent2);
+  }
+  .masthead-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .masthead-title {
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 2.4rem;
+    font-weight: 900;
+    letter-spacing: -1px;
+  }
+  .masthead-title span { color: var(--accent2); }
+  .masthead-meta {
+    text-align: left;
+    font-size: 0.75rem;
+    color: var(--rule);
+    line-height: 1.6;
+  }
+  .masthead-tagline {
+    text-align: center;
+    font-size: 0.7rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--rule);
+    padding: 8px 0;
+  }
+
+  /* ── Settings bar ── */
+  .settings-bar {
+    background: var(--cream);
+    border-bottom: 1px solid var(--rule);
+    padding: 10px 48px;
+  }
+  .settings-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .settings-inner label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+  .settings-inner input {
+    flex: 1;
+    max-width: 380px;
+    padding: 6px 10px;
+    border: 1px solid var(--rule);
+    background: var(--white);
+    border-radius: var(--radius);
+    font-family: monospace;
+    font-size: 0.78rem;
+    direction: ltr;
+  }
+  .btn-sm {
+    padding: 6px 14px;
+    background: var(--accent);
+    color: var(--white);
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Heebo', sans-serif;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .btn-sm:hover { opacity: 0.85; }
+  .key-status {
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .key-status.saved { color: #2a7a4b; }
+
+  /* ── Main layout ── */
+  .layout {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px 48px;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 40px;
+    align-items: start;
+  }
+
+  /* ── Section headings ── */
+  .section-label {
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-top: 2px solid var(--ink);
+    padding-top: 8px;
+    margin-bottom: 20px;
+  }
+
+  /* ── Story cards ── */
+  .stories { display: flex; flex-direction: column; gap: 0; }
+
+  .story-card {
+    border-bottom: 1px solid var(--rule);
+    padding: 24px 0;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: start;
+    transition: background 0.15s;
+  }
+  .story-card:first-child { padding-top: 0; }
+  .story-card:hover { background: rgba(0,0,0,0.02); margin: 0 -12px; padding: 24px 12px; }
+  .story-card:first-child:hover { padding-top: 0; }
+
+  .story-number {
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 0.7rem;
+    color: var(--accent2);
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .story-title {
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .story-title:hover { color: var(--accent); }
+  .story-summary {
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: #3a3530;
+    margin-bottom: 10px;
+  }
+  .story-sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .source-tag {
+    font-size: 0.68rem;
+    background: var(--cream);
+    border: 1px solid var(--rule);
+    padding: 2px 8px;
+    border-radius: 2px;
+    color: var(--muted);
+    text-decoration: none;
+    direction: ltr;
+  }
+  .source-tag:hover { background: var(--ink); color: var(--paper); }
+
+  .btn-write {
+    white-space: nowrap;
+    padding: 9px 18px;
+    background: var(--ink);
+    color: var(--paper);
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'Heebo', sans-serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-write:hover { background: var(--accent); }
+  .btn-write:disabled { background: var(--rule); cursor: not-allowed; }
+
+  /* ── Sidebar: AI Summary ── */
+  .sidebar {
+    position: sticky;
+    top: 24px;
+  }
+  .summary-box {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 24px;
+    border-radius: var(--radius);
+  }
+  .summary-box .section-label {
+    border-top-color: var(--accent2);
+    color: var(--rule);
+    margin-bottom: 16px;
+  }
+  .summary-text {
+    font-size: 0.83rem;
+    line-height: 1.75;
+    color: #d4c9b8;
+    white-space: pre-wrap;
+  }
+
+  /* ── Loading state ── */
+  .loading {
+    text-align: center;
+    padding: 80px 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+  }
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 2px solid var(--rule);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Article modal ── */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(10,8,6,0.75);
+    z-index: 100;
+    overflow-y: auto;
+    padding: 40px;
+  }
+  .modal-overlay.open { display: flex; justify-content: center; align-items: flex-start; }
+
+  .modal {
+    background: var(--paper);
+    width: 100%;
+    max-width: 860px;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.4);
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
+  .modal-header {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 20px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .modal-header h2 {
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+  .modal-close {
+    background: none;
+    border: none;
+    color: var(--paper);
+    font-size: 1.4rem;
+    cursor: pointer;
+    opacity: 0.7;
+    line-height: 1;
+    padding: 0 4px;
+  }
+  .modal-close:hover { opacity: 1; }
+
+  .modal-body { padding: 28px; }
+
+  .modal-generating {
+    text-align: center;
+    padding: 60px 0;
+    color: var(--muted);
+  }
+  .modal-generating .spinner { border-top-color: var(--accent2); }
+
+  /* ── Article output sections ── */
+  .article-section { margin-bottom: 28px; }
+  .article-section-label {
+    font-size: 0.65rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    border-top: 2px solid var(--accent2);
+    padding-top: 6px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .titles-list { display: flex; flex-direction: column; gap: 10px; }
+  .title-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px;
+    background: var(--cream);
+    border-radius: var(--radius);
+    border: 1px solid var(--rule);
+  }
+  .title-option span {
+    flex: 1;
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 1rem;
+    font-weight: 700;
+    line-height: 1.3;
+  }
+
+  .article-content {
+    background: var(--white);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 20px;
+    font-size: 0.88rem;
+    line-height: 1.8;
+    max-height: 380px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    direction: rtl;
+  }
+
+  .tags-box {
+    background: var(--white);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 0.85rem;
+    color: var(--muted);
+    direction: ltr;
+  }
+
+  .meta-box {
+    background: var(--white);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+  .meta-char-count {
+    font-size: 0.72rem;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .btn-copy {
+    padding: 4px 10px;
+    background: transparent;
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    font-family: 'Heebo', sans-serif;
+    font-size: 0.68rem;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.15s;
+  }
+  .btn-copy:hover { background: var(--ink); color: var(--white); border-color: var(--ink); }
+  .btn-copy.copied { background: #2a7a4b; color: var(--white); border-color: #2a7a4b; }
+
+  /* ── Date badge ── */
+  .date-badge {
+    display: inline-block;
+    background: var(--accent2);
+    color: var(--white);
+    font-size: 0.72rem;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-bottom: 24px;
+    letter-spacing: 1px;
+  }
+
+  /* ── Empty state ── */
+  .empty {
+    text-align: center;
+    padding: 80px 0;
+    color: var(--muted);
+  }
+  .empty h3 {
+    font-family: 'Frank Ruhl Libre', serif;
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- Masthead -->
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="masthead-title">🚢 דיגסט <span>קרוזים</span></div>
+    <div class="masthead-meta" id="masthead-date"></div>
+  </div>
+  <div class="masthead-tagline">לוח בקרה יומי לעורך תוכן</div>
+</header>
+
+<!-- Gemini API Key Settings -->
+<div class="settings-bar">
+  <div class="settings-inner">
+    <label for="api-key-input">🔑 מפתח Gemini API:</label>
+    <input type="password" id="api-key-input" placeholder="AIza..." dir="ltr">
+    <button class="btn-sm" onclick="saveKey()">שמור</button>
+    <span class="key-status" id="key-status">לא נשמר</span>
+  </div>
+</div>
+
+<!-- Main content -->
+<div class="layout">
+
+  <!-- Stories column -->
+  <main>
+    <div class="section-label">סיפורי היום</div>
+    <div id="stories-container">
+      <div class="loading">
+        <div class="spinner"></div>
+        טוען חדשות...
+      </div>
+    </div>
+  </main>
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="summary-box">
+      <div class="section-label">סיכום AI</div>
+      <div class="summary-text" id="ai-summary">טוען...</div>
+    </div>
+  </aside>
+
+</div>
+
+<!-- Article generation modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h2 id="modal-story-title">כותב כתבה...</h2>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body">
+      <div class="modal-generating">
+        <div class="spinner"></div>
+        <p>Gemini כותב את הכתבה...</p>
+        <p style="font-size:0.75rem; margin-top:8px; color: var(--muted)">זה לוקח כ-10 שניות</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Config ────────────────────────────────────────────────────────────────────
+
+const DIGEST_URL = './digest.json';
+
+// ── API Key ───────────────────────────────────────────────────────────────────
+
+function loadKey() {
+  return localStorage.getItem('gemini_api_key') || '';
+}
+
+function saveKey() {
+  const val = document.getElementById('api-key-input').value.trim();
+  if (!val) return;
+  localStorage.setItem('gemini_api_key', val);
+  const s = document.getElementById('key-status');
+  s.textContent = '✅ נשמר';
+  s.className = 'key-status saved';
+}
+
+function initKey() {
+  const key = loadKey();
+  if (key) {
+    document.getElementById('api-key-input').value = key;
+    const s = document.getElementById('key-status');
+    s.textContent = '✅ נשמר';
+    s.className = 'key-status saved';
+  }
+}
+
+// ── Date formatting ───────────────────────────────────────────────────────────
+
+function hebrewDate(dateStr) {
+  const d = dateStr ? new Date(dateStr) : new Date();
+  return d.toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+// ── Load digest ───────────────────────────────────────────────────────────────
+
+async function loadDigest() {
+  try {
+    const resp = await fetch(DIGEST_URL + '?t=' + Date.now());
+    if (!resp.ok) throw new Error('digest.json not found');
+    return await resp.json();
+  } catch (e) {
+    return null;
+  }
+}
+
+// ── Parse stories from AI summary ─────────────────────────────────────────────
+// The summary text contains clustered stories. We render them as cards.
+// Each story block starts with 🚢
+
+function parseStories(summaryText, rawItems) {
+  if (!summaryText || summaryText === 'לא נמצאו חדשות חדשות היום.') return [];
+
+  const blocks = summaryText.split(/(?=🚢)/g).filter(b => b.trim().startsWith('🚢'));
+
+  return blocks.map((block, i) => {
+    const lines = block.trim().split('\n').filter(l => l.trim());
+    const titleLine = lines[0].replace('🚢', '').replace(/\*/g, '').trim();
+
+    // Collect summary lines (before "מקורות:")
+    const summaryLines = [];
+    const sourceLines = [];
+    let inSources = false;
+    for (let j = 1; j < lines.length; j++) {
+      if (lines[j].includes('מקורות:')) { inSources = true; continue; }
+      if (lines[j] === '---') continue;
+      if (inSources) sourceLines.push(lines[j]);
+      else summaryLines.push(lines[j]);
+    }
+
+    // Parse source links
+    const sources = sourceLines
+      .filter(l => l.includes('http'))
+      .map(l => {
+        const urlMatch = l.match(/https?:\/\/[^\s)]+/);
+        const labelMatch = l.replace(/https?:\/\/[^\s)]+/, '').replace(/^[-–—\s*]+/, '').trim();
+        return { label: labelMatch || 'קישור', url: urlMatch ? urlMatch[0] : '#' };
+      });
+
+    // Find related raw items for this story (used for article generation context)
+    const relatedItems = rawItems.filter(item =>
+      sources.some(s => s.url === item.link) ||
+      sources.some(s => item.title && s.label && s.label.includes(item.title.substring(0, 20)))
+    );
+    if (relatedItems.length === 0 && rawItems.length > 0) {
+      relatedItems.push(...rawItems.slice(i * 2, i * 2 + 2));
+    }
+
+    return {
+      title: titleLine,
+      summary: summaryLines.join('\n').trim(),
+      sources,
+      relatedItems,
+      rawBlock: block
+    };
+  });
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+
+function renderStories(stories) {
+  const container = document.getElementById('stories-container');
+
+  if (!stories.length) {
+    container.innerHTML = `<div class="empty"><h3>אין חדשות היום</h3><p>נסה שוב מחר או הפעל את הסקריפט ידנית.</p></div>`;
+    return;
+  }
+
+  container.innerHTML = stories.map((story, i) => `
+    <div class="story-card">
+      <div>
+        <div class="story-number">סיפור ${i + 1}</div>
+        <div class="story-title" onclick="openModal(${i})">${story.title}</div>
+        <div class="story-summary">${story.summary}</div>
+        <div class="story-sources">
+          ${story.sources.map(s => `<a href="${s.url}" target="_blank" class="source-tag" title="${s.label}">${truncate(s.label, 40)}</a>`).join('')}
+        </div>
+      </div>
+      <button class="btn-write" onclick="openModal(${i})">
+        ✍️ כתוב כתבה
+      </button>
+    </div>
+  `).join('');
+}
+
+function truncate(str, n) {
+  return str.length > n ? str.substring(0, n) + '...' : str;
+}
+
+// ── Article generation ────────────────────────────────────────────────────────
+
+let currentStories = [];
+
+async function openModal(storyIndex) {
+  const story = currentStories[storyIndex];
+  if (!story) return;
+
+  const apiKey = loadKey();
+  if (!apiKey) {
+    alert('נא להזין מפתח Gemini API בשורת ההגדרות למעלה.');
+    return;
+  }
+
+  document.getElementById('modal-story-title').textContent = story.title;
+  document.getElementById('modal-body').innerHTML = `
+    <div class="modal-generating">
+      <div class="spinner"></div>
+      <p>Gemini כותב את הכתבה...</p>
+      <p style="font-size:0.75rem; margin-top:8px; color: var(--muted)">זה לוקח כ-10 שניות</p>
+    </div>`;
+  document.getElementById('modal-overlay').classList.add('open');
+
+  try {
+    const result = await generateArticle(story, apiKey);
+    renderArticle(result, story.title);
+  } catch (e) {
+    document.getElementById('modal-body').innerHTML = `
+      <div class="modal-generating">
+        <p style="color: var(--accent2)">❌ שגיאה: ${e.message}</p>
+        <p style="font-size:0.8rem; margin-top:8px; color: var(--muted)">בדוק שהמפתח תקין ונסה שוב.</p>
+      </div>`;
+  }
+}
+
+async function generateArticle(story, apiKey) {
+  const context = story.relatedItems.map(item =>
+    `TITLE: ${item.title}\nSNIPPET: ${item.snippet || ''}\nURL: ${item.link}`
+  ).join('\n\n');
+
+  const prompt = `
+אתה כותב תוכן SEO מקצועי לאתר חדשות קרוזים בעברית.
+
+בסיס הסיפור:
+${story.title}
+
+${story.summary}
+
+${context ? `מקורות נוספים:\n${context}` : ''}
+
+המשימה:
+צור תוכן בפורמט JSON בלבד (ללא קוד markdown, ללא בקטיקים, רק JSON גולמי):
+
+{
+  "titles": [
+    "כותרת ראשונה — ממוקדת SEO",
+    "כותרת שנייה — זווית שונה",
+    "כותרת שלישית — יצירתית ומושכת"
+  ],
+  "article": "כתבה מלאה בעברית עם כותרת ראשית (H1), כותרות משנה (H2), פסקאות מפורטות. לפחות 400 מילים. SEO מותאם לתחום הקרוזים.",
+  "tags": "תג1, תג2, תג3, תג4, תג5, תג6",
+  "meta": "תיאור מטא SEO עד 160 תווים בעברית"
+}
+
+חוקים:
+- הכל בעברית
+- הכתבה צריכה להיות מעניינת, אינפורמטיבית, SEO friendly
+- המטא תיאור: עד 160 תווים בדיוק
+- התגים: 5-8 תגים רלוונטיים
+- אל תצרף שום הסבר מחוץ ל-JSON
+`;
+
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      system: 'You are a Hebrew SEO content writer. Always respond with raw JSON only, no markdown.',
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!resp.ok) {
+    const err = await resp.json();
+    throw new Error(err.error?.message || resp.statusText);
+  }
+
+  const data = await resp.json();
+  const text = data.content.map(b => b.text || '').join('');
+
+  try {
+    const clean = text.replace(/```json|```/g, '').trim();
+    return JSON.parse(clean);
+  } catch {
+    throw new Error('התגובה מה-AI לא הייתה בפורמט תקין. נסה שוב.');
+  }
+}
+
+function renderArticle(result, storyTitle) {
+  const titlesHtml = (result.titles || []).map((t, i) => `
+    <div class="title-option">
+      <span>${t}</span>
+      <button class="btn-copy" onclick="copyText(this, \`${escapeJs(t)}\`)">העתק</button>
+    </div>
+  `).join('');
+
+  const metaLen = (result.meta || '').length;
+
+  document.getElementById('modal-body').innerHTML = `
+    <div class="article-section">
+      <div class="article-section-label">
+        3 אפשרויות כותרת
+      </div>
+      <div class="titles-list">${titlesHtml}</div>
+    </div>
+
+    <div class="article-section">
+      <div class="article-section-label">
+        כתבה מלאה
+        <button class="btn-copy" onclick="copyText(this, \`${escapeJs(result.article || '')}\`)">העתק הכל</button>
+      </div>
+      <div class="article-content">${result.article || ''}</div>
+    </div>
+
+    <div class="article-section">
+      <div class="article-section-label">
+        תגיות
+        <button class="btn-copy" onclick="copyText(this, \`${escapeJs(result.tags || '')}\`)">העתק</button>
+      </div>
+      <div class="tags-box">${result.tags || ''}</div>
+    </div>
+
+    <div class="article-section">
+      <div class="article-section-label">
+        Meta Description
+        <button class="btn-copy" onclick="copyText(this, \`${escapeJs(result.meta || '')}\`)">העתק</button>
+      </div>
+      <div class="meta-box">
+        ${result.meta || ''}
+        <div class="meta-char-count">${metaLen} תווים ${metaLen > 160 ? '⚠️ ארוך מדי' : '✅'}</div>
+      </div>
+    </div>
+  `;
+}
+
+function escapeJs(str) {
+  return (str || '').replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+}
+
+function copyText(btn, text) {
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = '✅ הועתק';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'העתק';
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+async function init() {
+  initKey();
+
+  const digest = await loadDigest();
+
+  // Update masthead date
+  const dateStr = digest?.date || null;
+  document.getElementById('masthead-date').innerHTML =
+    `<div>${hebrewDate(dateStr)}</div><div>${digest ? (digest.items?.length || 0) + ' פריטים שנאספו' : 'אין נתונים'}</div>`;
+
+  if (!digest) {
+    document.getElementById('stories-container').innerHTML = `
+      <div class="empty">
+        <h3>לא נמצא digest.json</h3>
+        <p>הרץ את main.py כדי לייצר את הדיגסט הראשון.</p>
+      </div>`;
+    document.getElementById('ai-summary').textContent = 'אין נתונים.';
+    return;
+  }
+
+  // Show AI summary in sidebar
+  document.getElementById('ai-summary').textContent = digest.summary || 'אין סיכום.';
+
+  // Parse and render stories
+  currentStories = parseStories(digest.summary, digest.items || []);
+  renderStories(currentStories);
+}
+
+init();
+</script>
+</body>
+</html>
