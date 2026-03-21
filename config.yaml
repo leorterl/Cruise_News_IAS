@@ -1,0 +1,194 @@
+settings:
+  time_window_hours: 24
+  max_articles: 3
+  request_timeout: 15
+  user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+
+sites:
+  # --- Tier 1: RSS ---
+  - name: "Royal Caribbean Blog"
+    url: "https://www.royalcaribbeanblog.com/"
+    type: "rss"
+    rss_url: "https://www.royalcaribbeanblog.com/rss.xml"
+    content_selector: ".field-item p"
+
+  - name: "Travel and Tour World"
+    url: "https://www.travelandtourworld.com/news/article/category/cruise-news/"
+    type: "rss"
+    rss_url: "https://www.travelandtourworld.com/news/article/category/cruise-news/feed/"
+    content_selector: ".details p, article p"
+
+  - name: "NCLH Press Releases"
+    url: "https://www.nclhltd.com/news-media/press-releases"
+    type: "html"
+    listing_selector: ".media-heading a"
+    content_selector: "article p, .press-release-body p"
+
+  # --- Tier 2: HTML Scraping ---
+  - name: "Cruise Fever"
+    url: "https://cruisefever.net/"
+    type: "html"
+    listing_selector: ".entry-title a"
+    content_selector: ".td-post-content p"
+
+  - name: "Cruise Industry News"
+    url: "https://cruiseindustrynews.com/cruise-news/"
+    type: "html"
+    listing_selector: ".elementor-post__title a"
+    content_selector: ".elementor-widget-theme-post-content p, article p"
+
+  - name: "Carnival News"
+    url: "https://www.carnival-news.com/news"
+    type: "html"
+    listing_selector: "article a"
+    content_selector: ".entry-content p, article p"
+
+  - name: "The Points Guy - Cruise"
+    url: "https://thepointsguy.com/cruise/"
+    type: "html"
+    listing_selector: "a[href*='/cruise/']"
+    content_selector: ".articleBody p, .entry-content p"
+
+  - name: "MSC Press Area (INT)"
+    url: "https://www.mscpressarea.com/en_INT/press-releases/"
+    type: "html"
+    listing_selector: "a[href*='/press-releases/']"
+    content_selector: "p"
+    url_prefix: "https://www.mscpressarea.com/en_INT"
+
+  - name: "MSC Press Area (US)"
+    url: "https://www.mscpressarea.com/en_US/press-releases/"
+    type: "html"
+    listing_selector: "a[href*='/press-releases/']"
+    content_selector: "p"
+    url_prefix: "https://www.mscpressarea.com/en_US"
+
+  - name: "Carnival Corp"
+    url: "https://www.carnivalcorp.com/media-center"
+    type: "html"
+    listing_selector: "article a"
+    content_selector: "article p, .press-release p"
+
+  - name: "Holland America"
+    url: "https://www.hollandamerica.com/en/newsroom/newsfeed"
+    type: "html"
+    listing_selector: "a[href*='newsroom/newsfeed/']"
+    content_selector: ".cmp-text p"
+
+  - name: "Explora Journeys"
+    url: "https://explorajourneys.com/us/en/press-and-media/press"
+    type: "html"
+    listing_selector: "a[href*='/press-and-media/press/']"
+    content_selector: ".cmp-text p"
+
+  - name: "Oceania Cruises"
+    url: "https://www.oceaniacruises.com/news/"
+    type: "html"
+    listing_selector: ".c33_aside a"
+    title_selector: "h6.c33_subtitle"
+    content_selector: "article p"
+
+  - name: "Disney Cruise Line"
+    url: "https://disneyexperiences.com/dcl-press/release/"
+    type: "html"
+    listing_selector: "div.col-md-4 > a[href*='/dcl-press/release/']"
+    content_selector: "article p, .entry-content p, p"
+
+  - name: "Seabourn"
+    url: "https://www.seabourn.com/en/news/press-release"
+    type: "html"
+    listing_selector: "a[href*='press-releases/']"
+    content_selector: "article p, .cmp-text p"
+
+  - name: "Princess Cruises"
+    url: "https://www.princess.com/news/"
+    type: "html"
+    listing_selector: "a[href*='/news/']"
+    content_selector: "article p, .content p"
+
+  # --- Stealth (curl_cffi - bypasses bot protection) ---
+  - name: "Royal Caribbean Press Center"
+    url: "https://www.royalcaribbeanpresscenter.com/press-releases/"
+    type: "stealth"
+    listing_selector: ".pdf_item_title"
+    title_selector: ".pdf_item_title"
+    content_selector: ".press-release-body p, article p, p"
+
+  - name: "Crystal Cruises"
+    url: "https://www.crystalcruises.com/press"
+    type: "stealth"
+    listing_selector: "a[href*='/press/']"
+    content_selector: "p"
+
+  - name: "CLIA (cruising.org) News"
+    url: "https://cruising.org/news"
+    type: "stealth"
+    listing_selector: "article a"
+    content_selector: "article p, .content p, p"
+
+  - name: "CLIA Resources"
+    url: "https://cruising.org/resource-list"
+    type: "stealth"
+    listing_selector: "article a"
+    content_selector: "article p, .content p, p"
+
+  - name: "Cunard"
+    url: "https://www.cunard.com/en-us/contact-us/press-releases"
+    type: "stealth"
+    listing_selector: "h3 a, h3"
+    content_selector: "article p, .content p, p"
+
+  - name: "P&O Cruises"
+    url: "https://www.pocruises.com/press"
+    type: "stealth"
+    listing_selector: "a[href*='press']"
+    content_selector: "article p, .content p, p"
+
+  - name: "Windstar Cruises"
+    url: "https://www.windstarcruises.com/blog/"
+    type: "stealth"
+    listing_selector: "h4 a"
+    content_selector: "article p, .entry-content p"
+
+  # --- Playwright (JS-rendered SPAs) ---
+  - name: "NCL Newsroom"
+    url: "https://www.ncl.com/newsroom/en-us/"
+    type: "playwright"
+    listing_selector: ".pp_blockheadlines_item_container a"
+    content_selector: "article p, .pp_release_body p"
+
+  - name: "Royal Caribbean Group"
+    url: "https://royalcaribbeangrouppresscenter.com/"
+    type: "playwright"
+    listing_selector: "a[href*='/news/']"
+    content_selector: "article p, .post-content p, p"
+
+  - name: "RSSC (Regent)"
+    url: "https://www.rssc.com/news"
+    type: "playwright"
+    listing_selector: "a[href*='/news/details']"
+    content_selector: "article p"
+
+  - name: "Celebrity Cruises Press Center"
+    url: "https://royalcaribbeangrouppresscenter.com/celebritycruises/news"
+    type: "playwright"
+    listing_selector: "a[href*='/news/']"
+    content_selector: ".press-release-body p, article p"
+
+  - name: "Breaking Travel News - Cruise"
+    url: "https://www.breakingtravelnews.com/news/category/cruise/"
+    type: "playwright"
+    listing_selector: "article h4 a"
+    content_selector: "article p, .entry-content p"
+
+  - name: "TravelPulse - Cruise"
+    url: "https://www.travelpulse.com/news/cruise"
+    type: "playwright"
+    listing_selector: "a[href*='/news/cruise/']"
+    content_selector: "article p, .article-body p"
+
+  - name: "Travel Weekly - Cruise"
+    url: "https://www.travelweekly.com/Cruise-Travel"
+    type: "playwright"
+    listing_selector: "a[href*='Cruise']"
+    content_selector: "article p, .article-body p"
