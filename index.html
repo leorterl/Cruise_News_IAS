@@ -624,7 +624,7 @@ ${context ? `מקורות:\n${context}` : ''}
 
 חוקים: הכל בעברית. אל תצרף שום טקסט מחוץ ל-JSON.`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
 
   const resp = await fetch(url, {
     method: 'POST',
@@ -643,11 +643,23 @@ ${context ? `מקורות:\n${context}` : ''}
   const data = await resp.json();
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
+  // Gemini often wraps JSON in ```json ... ``` despite being told not to.
+  // Try several extraction strategies in order.
   try {
-    const clean = text.replace(/```json|```/g, '').trim();
-    return JSON.parse(clean);
-  } catch {
-    throw new Error('התגובה מ-Gemini לא הייתה בפורמט JSON תקין. נסה שוב.');
+    // 1. Try extracting JSON from inside a code block
+    const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (codeBlock) return JSON.parse(codeBlock[1].trim());
+
+    // 2. Try extracting the first { ... } object from the raw text
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (jsonMatch) return JSON.parse(jsonMatch[0]);
+
+    // 3. Try the raw text as-is
+    return JSON.parse(text.trim());
+  } catch (e) {
+    // Show the raw Gemini output so we can debug
+    console.error('Raw Gemini response:', text);
+    throw new Error('Gemini החזיר תגובה לא תקינה. פתח את Console (F12) לפרטים.');
   }
 }
 
