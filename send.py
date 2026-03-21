@@ -1,7 +1,8 @@
 import requests
 
-BOT_TOKEN = "8370574339:AAE_X_nxsveEfou7LnT5LMQcZsWNcpHOCr4"
-CHAT_ID = "448738115"
+import os
+BOT_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
 def send_message(text):
     print("Sending Telegram message to", CHAT_ID)
