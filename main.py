@@ -4,25 +4,20 @@ from datetime import date, timedelta
 
 from crawler import collect
 from ai import summarize
-from send import send_message
+from send import send_message, send_link
 
 SEEN_FILE = "seen_links.json"
+DIGEST_FILE = "digest.json"
+DASHBOARD_URL = os.environ.get("DASHBOARD_URL", "https://YOUR_USERNAME.github.io/cruise-digest")
 
 
-# ── Deduplication helpers ──────────────────────────────────────────────────────
+# ── Deduplication ──────────────────────────────────────────────────────────────
 
 def load_seen() -> dict:
-    """
-    Load seen links from disk.
-    Returns a dict of {url: date_string}.
-    Automatically drops links older than 2 days to keep the file small.
-    """
     if not os.path.exists(SEEN_FILE):
         return {}
-
     with open(SEEN_FILE) as f:
         data = json.load(f)
-
     cutoff = str(date.today() - timedelta(days=2))
     return {link: d for link, d in data.items() if d >= cutoff}
 
@@ -39,38 +34,42 @@ def mark_seen(seen: dict, new_items: list) -> dict:
     return seen
 
 
-# ── Main flow ──────────────────────────────────────────────────────────────────
+def save_digest(raw_items: list, ai_summary: str):
+    """Save today's digest to digest.json for the dashboard."""
+    digest = {
+        "date": str(date.today()),
+        "summary": ai_summary,
+        "items": raw_items
+    }
+    with open(DIGEST_FILE, "w", encoding="utf-8") as f:
+        json.dump(digest, f, ensure_ascii=False, indent=2)
+    print(f"[main] Saved digest.json with {len(raw_items)} items.")
 
-def build_greeting() -> str:
-    return (
-        "בוקר טוב עוזי 🌅\n"
-        "הנה החדשות החמות בעולם הקרוזים והתיירות:\n\n"
-    )
 
+# ── Main ───────────────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    # 1. Load previously seen links
     seen = load_seen()
     print(f"[main] Loaded {len(seen)} previously seen links.")
 
-    # 2. Crawl — skip already-seen links
     new_items = collect(seen_links=set(seen.keys()))
 
     if not new_items:
-        print("[main] No new items found. Sending a short notice.")
+        print("[main] No new items found.")
+        save_digest([], "לא נמצאו חדשות חדשות היום.")
         send_message("בוקר טוב עוזי 🌅\nלא נמצאו חדשות חדשות היום בעולם הקרוזים.")
     else:
-        # 3. Summarize with AI
         print(f"[main] Sending {len(new_items)} items to AI...")
-        digest = summarize(new_items)
+        digest_text = summarize(new_items)
 
-        # 4. Prepend greeting
-        full_message = build_greeting() + digest
+        save_digest(new_items, digest_text)
 
-        # 5. Send to Telegram
-        send_message(full_message)
+        send_link(
+            text="בוקר טוב עוזי 🌅\nהדיגסט של היום מוכן. לחץ כאן לצפייה וכתיבת כתבות:",
+            url=DASHBOARD_URL,
+            label="פתח דשבורד"
+        )
 
-        # 6. Persist seen links so tomorrow we skip these
         seen = mark_seen(seen, new_items)
         save_seen(seen)
         print(f"[main] Done. Saved {len(seen)} total seen links.")
