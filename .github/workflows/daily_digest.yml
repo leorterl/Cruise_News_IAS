@@ -1,0 +1,38 @@
+name: Daily Cruise Digest
+
+on:
+  schedule:
+    - cron: "0 1 * * *"   # 03:00 UTC — adjust if Uzi is in IL (use "0 1 * * *" for 03:00 IST)
+  workflow_dispatch:        # allow manual trigger from GitHub UI for testing
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install requests beautifulsoup4 google-genai
+
+      - name: Run digest
+        env:
+          # Store your keys as GitHub Actions secrets, not in code
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python main.py
+
+      - name: Commit updated seen_links.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add seen_links.json
+          git diff --cached --quiet || git commit -m "chore: update seen links [skip ci]"
+          git push
