@@ -1,7 +1,7 @@
 from google import genai
 
-client = genai.Client(api_key="AIzaSyDpK0GZesMeWdp8HsxDsqbyAU85BcoZ6so")
-
+import os
+client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 def summarize(news_items: list) -> str:
     """
