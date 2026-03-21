@@ -548,63 +548,138 @@ ${context ? `מקורות:\n${context}` : ''}
 }
 
 // ── Render article ────────────────────────────────────────────────────────────
+// All copy text is stored in a Map keyed by button id — no inline onclick strings,
+// which avoids GitHub Pages' strict Content Security Policy.
+const copyStore = new Map();
+let copyIdCounter = 0;
+
+function makeCopyBtn(text, label = 'העתק') {
+  const id = 'cp-' + (++copyIdCounter);
+  copyStore.set(id, text);
+  return `<button class="btn-copy" data-copy-id="${id}">${label}</button>`;
+}
+
 function renderArticle(result, story, ending) {
-  const titlesHtml = (result.titles || []).map(t => `
-    <div class="title-opt">
-      <span>${t}</span>
-      <button class="btn-copy" onclick="copyText(this,\`${esc(t)}\`)">העתק</button>
-    </div>`).join('');
-
-  const deckHtml = result.deck ? `
-    <div class="art-section">
-      <div class="art-label">תת-כותרת (Deck)
-        <button class="btn-copy" onclick="copyText(this,\`${esc(result.deck)}\`)">העתק</button>
-      </div>
-      <div class="field-box">${result.deck}</div>
-    </div>` : '';
-
   const fullArticle = (result.article || '') + '\n\n' + ending;
   const metaLen = (result.meta || '').length;
 
-  const sourcesHtml = story.sources.length ? `
-    <div class="modal-sources">
-      <div class="modal-sources-label">מקורות מקוריים לבדיקת עובדות</div>
-      ${story.sources.map(s => `<a href="${s.url}" target="_blank" class="modal-source-link">${s.url}</a>`).join('')}
-    </div>` : '';
+  const body = document.getElementById('modal-body');
 
-  document.getElementById('modal-body').innerHTML = `
-    ${sourcesHtml}
-    <div class="art-section">
-      <div class="art-label">3 אפשרויות כותרת</div>
-      <div class="titles-list">${titlesHtml}</div>
-    </div>
-    ${deckHtml}
-    <div class="art-section">
-      <div class="art-label">כתבה מלאה (כולל סיומת)
-        <button class="btn-copy" onclick="copyText(this,\`${esc(fullArticle)}\`)">העתק הכל</button>
-      </div>
-      <div class="article-box">${fullArticle}</div>
-    </div>
-    <div class="art-section">
-      <div class="art-label">תגיות
-        <button class="btn-copy" onclick="copyText(this,\`${esc(result.tags||'')}\`)">העתק</button>
-      </div>
-      <div class="field-box">${result.tags || ''}</div>
-    </div>
-    <div class="art-section">
-      <div class="art-label">Meta Description
-        <button class="btn-copy" onclick="copyText(this,\`${esc(result.meta||'')}\`)">העתק</button>
-      </div>
-      <div class="field-box">
-        ${result.meta || ''}
-        <div class="meta-count ${metaLen > 155 ? 'warn' : 'ok'}">${metaLen} / 155 תווים ${metaLen > 155 ? '⚠️' : '✓'}</div>
-      </div>
-    </div>`;
+  // Sources
+  const sourcesDiv = document.createElement('div');
+  if (story.sources.length) {
+    sourcesDiv.className = 'modal-sources';
+    sourcesDiv.innerHTML = `<div class="modal-sources-label">מקורות מקוריים לבדיקת עובדות</div>` +
+      story.sources.map(s => `<a href="${s.url}" target="_blank" class="modal-source-link">${s.url}</a>`).join('');
+  }
+
+  // Titles
+  const titlesSection = document.createElement('div');
+  titlesSection.className = 'art-section';
+  titlesSection.innerHTML = `<div class="art-label">3 אפשרויות כותרת</div>`;
+  const titlesList = document.createElement('div');
+  titlesList.className = 'titles-list';
+  (result.titles || []).forEach(t => {
+    const row = document.createElement('div');
+    row.className = 'title-opt';
+    const span = document.createElement('span');
+    span.textContent = t;
+    row.appendChild(span);
+    const btn = document.createElement('button');
+    btn.className = 'btn-copy';
+    btn.textContent = 'העתק';
+    btn.addEventListener('click', () => doCopy(btn, t));
+    row.appendChild(btn);
+    titlesList.appendChild(row);
+  });
+  titlesSection.appendChild(titlesList);
+
+  // Deck
+  const deckSection = document.createElement('div');
+  if (result.deck) {
+    deckSection.className = 'art-section';
+    const label = document.createElement('div');
+    label.className = 'art-label';
+    label.textContent = 'תת-כותרת (Deck)';
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn-copy';
+    copyBtn.textContent = 'העתק';
+    copyBtn.addEventListener('click', () => doCopy(copyBtn, result.deck));
+    label.appendChild(copyBtn);
+    const box = document.createElement('div');
+    box.className = 'field-box';
+    box.textContent = result.deck;
+    deckSection.appendChild(label);
+    deckSection.appendChild(box);
+  }
+
+  // Full article
+  const articleSection = document.createElement('div');
+  articleSection.className = 'art-section';
+  const articleLabel = document.createElement('div');
+  articleLabel.className = 'art-label';
+  articleLabel.textContent = 'כתבה מלאה (כולל סיומת)';
+  const articleCopyBtn = document.createElement('button');
+  articleCopyBtn.className = 'btn-copy';
+  articleCopyBtn.textContent = 'העתק הכל';
+  articleCopyBtn.addEventListener('click', () => doCopy(articleCopyBtn, fullArticle));
+  articleLabel.appendChild(articleCopyBtn);
+  const articleBox = document.createElement('div');
+  articleBox.className = 'article-box';
+  articleBox.textContent = fullArticle;
+  articleSection.appendChild(articleLabel);
+  articleSection.appendChild(articleBox);
+
+  // Tags
+  const tagsSection = document.createElement('div');
+  tagsSection.className = 'art-section';
+  const tagsLabel = document.createElement('div');
+  tagsLabel.className = 'art-label';
+  tagsLabel.textContent = 'תגיות';
+  const tagsCopyBtn = document.createElement('button');
+  tagsCopyBtn.className = 'btn-copy';
+  tagsCopyBtn.textContent = 'העתק';
+  tagsCopyBtn.addEventListener('click', () => doCopy(tagsCopyBtn, result.tags || ''));
+  tagsLabel.appendChild(tagsCopyBtn);
+  const tagsBox = document.createElement('div');
+  tagsBox.className = 'field-box';
+  tagsBox.textContent = result.tags || '';
+  tagsSection.appendChild(tagsLabel);
+  tagsSection.appendChild(tagsBox);
+
+  // Meta
+  const metaSection = document.createElement('div');
+  metaSection.className = 'art-section';
+  const metaLabel = document.createElement('div');
+  metaLabel.className = 'art-label';
+  metaLabel.textContent = 'Meta Description';
+  const metaCopyBtn = document.createElement('button');
+  metaCopyBtn.className = 'btn-copy';
+  metaCopyBtn.textContent = 'העתק';
+  metaCopyBtn.addEventListener('click', () => doCopy(metaCopyBtn, result.meta || ''));
+  metaLabel.appendChild(metaCopyBtn);
+  const metaBox = document.createElement('div');
+  metaBox.className = 'field-box';
+  metaBox.textContent = result.meta || '';
+  const metaCount = document.createElement('div');
+  metaCount.className = 'meta-count ' + (metaLen > 155 ? 'warn' : 'ok');
+  metaCount.textContent = `${metaLen} / 155 תווים ${metaLen > 155 ? '⚠️' : '✓'}`;
+  metaBox.appendChild(metaCount);
+  metaSection.appendChild(metaLabel);
+  metaSection.appendChild(metaBox);
+
+  // Assemble
+  body.innerHTML = '';
+  if (story.sources.length) body.appendChild(sourcesDiv);
+  body.appendChild(titlesSection);
+  if (result.deck) body.appendChild(deckSection);
+  body.appendChild(articleSection);
+  body.appendChild(tagsSection);
+  body.appendChild(metaSection);
 }
 
 // ── Utils ─────────────────────────────────────────────────────────────────────
-function esc(s) { return (s||'').replace(/\\/g,'\\\\').replace(/`/g,'\\`').replace(/\$/g,'\\$'); }
-function copyText(btn, text) {
+function doCopy(btn, text) {
   navigator.clipboard.writeText(text).then(() => {
     btn.textContent = '✓ הועתק'; btn.classList.add('copied');
     setTimeout(() => { btn.textContent = 'העתק'; btn.classList.remove('copied'); }, 2000);
