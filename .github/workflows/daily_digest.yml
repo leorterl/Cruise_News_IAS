@@ -40,7 +40,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add seen_links.json digest.json
+          git add seen_links.json digest.json digest-*.json
           git diff --cached --quiet || git commit -m "chore: update digest [skip ci]"
           git push
         env:
@@ -59,7 +59,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          ref: main  # get the latest commit including digest.json
+          ref: main
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -67,7 +67,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'  # deploy entire repo root (index.html + digest.json)
+          path: '.'
 
       - name: Deploy to GitHub Pages
         id: deployment
