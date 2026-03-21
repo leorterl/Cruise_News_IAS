@@ -26,8 +26,19 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
-        run: pip install requests beautifulsoup4 google-genai
+      - name: Install Python dependencies
+        run: |
+          pip install \
+            requests \
+            beautifulsoup4 \
+            feedparser \
+            pyyaml \
+            google-genai \
+            curl_cffi \
+            patchright
+
+      - name: Install Chromium for Playwright
+        run: patchright install chromium --with-deps
 
       - name: Run digest
         env:
