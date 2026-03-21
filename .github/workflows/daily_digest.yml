@@ -2,12 +2,20 @@ name: Daily Cruise Digest
 
 on:
   schedule:
-    - cron: "0 1 * * *"   # 03:00 UTC — adjust if Uzi is in IL (use "0 1 * * *" for 03:00 IST)
-  workflow_dispatch:        # allow manual trigger from GitHub UI for testing
+    - cron: "0 1 * * *"  # 01:00 UTC = 03:00 IST
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
 
 jobs:
   digest:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      DASHBOARD_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
 
     steps:
       - name: Checkout repo
@@ -23,16 +31,44 @@ jobs:
 
       - name: Run digest
         env:
-          # Store your keys as GitHub Actions secrets, not in code
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python main.py
 
-      - name: Commit updated seen_links.json
+      - name: Commit updated data files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add seen_links.json
-          git diff --cached --quiet || git commit -m "chore: update seen links [skip ci]"
+          git add seen_links.json digest.json
+          git diff --cached --quiet || git commit -m "chore: update digest [skip ci]"
           git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  deploy-pages:
+    needs: digest
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          ref: main  # get the latest commit including digest.json
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'  # deploy entire repo root (index.html + digest.json)
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
