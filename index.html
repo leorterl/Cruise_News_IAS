@@ -148,8 +148,6 @@
     transition: background 0.15s;
   }
   .story-card:first-child { padding-top: 0; }
-  .story-card:hover { background: rgba(0,0,0,0.02); margin: 0 -12px; padding: 24px 12px; }
-  .story-card:first-child:hover { padding-top: 0; }
 
   .story-number {
     font-family: 'Frank Ruhl Libre', serif;
@@ -209,7 +207,7 @@
   .btn-write:hover { background: var(--accent); }
   .btn-write:disabled { background: var(--rule); cursor: not-allowed; }
 
-  /* ── Sidebar: AI Summary ── */
+  /* ── Sidebar ── */
   .sidebar {
     position: sticky;
     top: 24px;
@@ -232,7 +230,7 @@
     white-space: pre-wrap;
   }
 
-  /* ── Loading state ── */
+  /* ── Loading ── */
   .loading {
     text-align: center;
     padding: 80px 0;
@@ -250,7 +248,7 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── Article modal ── */
+  /* ── Modal ── */
   .modal-overlay {
     display: none;
     position: fixed;
@@ -310,7 +308,7 @@
   }
   .modal-generating .spinner { border-top-color: var(--accent2); }
 
-  /* ── Article output sections ── */
+  /* ── Article sections ── */
   .article-section { margin-bottom: 28px; }
   .article-section-label {
     font-size: 0.65rem;
@@ -356,23 +354,14 @@
     direction: rtl;
   }
 
-  .tags-box {
-    background: var(--white);
-    border: 1px solid var(--rule);
-    border-radius: var(--radius);
-    padding: 12px 16px;
-    font-size: 0.85rem;
-    color: var(--muted);
-    direction: ltr;
-  }
-
-  .meta-box {
+  .tags-box, .meta-box {
     background: var(--white);
     border: 1px solid var(--rule);
     border-radius: var(--radius);
     padding: 12px 16px;
     font-size: 0.85rem;
   }
+  .tags-box { color: var(--muted); direction: ltr; }
   .meta-char-count {
     font-size: 0.72rem;
     color: var(--muted);
@@ -393,19 +382,7 @@
   .btn-copy:hover { background: var(--ink); color: var(--white); border-color: var(--ink); }
   .btn-copy.copied { background: #2a7a4b; color: var(--white); border-color: #2a7a4b; }
 
-  /* ── Date badge ── */
-  .date-badge {
-    display: inline-block;
-    background: var(--accent2);
-    color: var(--white);
-    font-size: 0.72rem;
-    padding: 3px 10px;
-    border-radius: 2px;
-    margin-bottom: 24px;
-    letter-spacing: 1px;
-  }
-
-  /* ── Empty state ── */
+  /* ── Empty ── */
   .empty {
     text-align: center;
     padding: 80px 0;
@@ -420,7 +397,6 @@
 </head>
 <body>
 
-<!-- Masthead -->
 <header class="masthead">
   <div class="masthead-inner">
     <div class="masthead-title">🚢 דיגסט <span>קרוזים</span></div>
@@ -429,7 +405,6 @@
   <div class="masthead-tagline">לוח בקרה יומי לעורך תוכן</div>
 </header>
 
-<!-- Gemini API Key Settings -->
 <div class="settings-bar">
   <div class="settings-inner">
     <label for="api-key-input">🔑 מפתח Gemini API:</label>
@@ -439,10 +414,7 @@
   </div>
 </div>
 
-<!-- Main content -->
 <div class="layout">
-
-  <!-- Stories column -->
   <main>
     <div class="section-label">סיפורי היום</div>
     <div id="stories-container">
@@ -453,43 +425,28 @@
     </div>
   </main>
 
-  <!-- Sidebar -->
   <aside class="sidebar">
     <div class="summary-box">
       <div class="section-label">סיכום AI</div>
       <div class="summary-text" id="ai-summary">טוען...</div>
     </div>
   </aside>
-
 </div>
 
-<!-- Article generation modal -->
 <div class="modal-overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
   <div class="modal" id="modal">
     <div class="modal-header">
       <h2 id="modal-story-title">כותב כתבה...</h2>
       <button class="modal-close" onclick="closeModal()">✕</button>
     </div>
-    <div class="modal-body" id="modal-body">
-      <div class="modal-generating">
-        <div class="spinner"></div>
-        <p>Gemini כותב את הכתבה...</p>
-        <p style="font-size:0.75rem; margin-top:8px; color: var(--muted)">זה לוקח כ-10 שניות</p>
-      </div>
-    </div>
+    <div class="modal-body" id="modal-body"></div>
   </div>
 </div>
 
 <script>
-// ── Config ────────────────────────────────────────────────────────────────────
-
-const DIGEST_URL = './digest.json';
-
 // ── API Key ───────────────────────────────────────────────────────────────────
 
-function loadKey() {
-  return localStorage.getItem('gemini_api_key') || '';
-}
+function loadKey() { return localStorage.getItem('gemini_api_key') || ''; }
 
 function saveKey() {
   const val = document.getElementById('api-key-input').value.trim();
@@ -510,28 +467,34 @@ function initKey() {
   }
 }
 
-// ── Date formatting ───────────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function hebrewDate(dateStr) {
   const d = dateStr ? new Date(dateStr) : new Date();
   return d.toLocaleDateString('he-IL', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 }
 
+function truncate(str, n) {
+  return str.length > n ? str.substring(0, n) + '...' : str;
+}
+
+function escapeJs(str) {
+  return (str || '').replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
+}
+
 // ── Load digest ───────────────────────────────────────────────────────────────
 
 async function loadDigest() {
   try {
-    const resp = await fetch(DIGEST_URL + '?t=' + Date.now());
-    if (!resp.ok) throw new Error('digest.json not found');
+    const resp = await fetch('./digest.json?t=' + Date.now());
+    if (!resp.ok) throw new Error('not found');
     return await resp.json();
   } catch (e) {
     return null;
   }
 }
 
-// ── Parse stories from AI summary ─────────────────────────────────────────────
-// The summary text contains clustered stories. We render them as cards.
-// Each story block starts with 🚢
+// ── Parse stories ─────────────────────────────────────────────────────────────
 
 function parseStories(summaryText, rawItems) {
   if (!summaryText || summaryText === 'לא נמצאו חדשות חדשות היום.') return [];
@@ -542,10 +505,10 @@ function parseStories(summaryText, rawItems) {
     const lines = block.trim().split('\n').filter(l => l.trim());
     const titleLine = lines[0].replace('🚢', '').replace(/\*/g, '').trim();
 
-    // Collect summary lines (before "מקורות:")
     const summaryLines = [];
     const sourceLines = [];
     let inSources = false;
+
     for (let j = 1; j < lines.length; j++) {
       if (lines[j].includes('מקורות:')) { inSources = true; continue; }
       if (lines[j] === '---') continue;
@@ -553,35 +516,26 @@ function parseStories(summaryText, rawItems) {
       else summaryLines.push(lines[j]);
     }
 
-    // Parse source links
     const sources = sourceLines
       .filter(l => l.includes('http'))
       .map(l => {
         const urlMatch = l.match(/https?:\/\/[^\s)]+/);
-        const labelMatch = l.replace(/https?:\/\/[^\s)]+/, '').replace(/^[-–—\s*]+/, '').trim();
-        return { label: labelMatch || 'קישור', url: urlMatch ? urlMatch[0] : '#' };
+        const label = l.replace(/https?:\/\/[^\s)]+/, '').replace(/^[-–—\s*]+/, '').trim();
+        return { label: label || 'קישור', url: urlMatch ? urlMatch[0] : '#' };
       });
 
-    // Find related raw items for this story (used for article generation context)
     const relatedItems = rawItems.filter(item =>
-      sources.some(s => s.url === item.link) ||
-      sources.some(s => item.title && s.label && s.label.includes(item.title.substring(0, 20)))
+      sources.some(s => s.url === item.link)
     );
-    if (relatedItems.length === 0 && rawItems.length > 0) {
+    if (relatedItems.length === 0) {
       relatedItems.push(...rawItems.slice(i * 2, i * 2 + 2));
     }
 
-    return {
-      title: titleLine,
-      summary: summaryLines.join('\n').trim(),
-      sources,
-      relatedItems,
-      rawBlock: block
-    };
+    return { title: titleLine, summary: summaryLines.join('\n').trim(), sources, relatedItems };
   });
 }
 
-// ── Render ────────────────────────────────────────────────────────────────────
+// ── Render stories ────────────────────────────────────────────────────────────
 
 function renderStories(stories) {
   const container = document.getElementById('stories-container');
@@ -598,26 +552,20 @@ function renderStories(stories) {
         <div class="story-title" onclick="openModal(${i})">${story.title}</div>
         <div class="story-summary">${story.summary}</div>
         <div class="story-sources">
-          ${story.sources.map(s => `<a href="${s.url}" target="_blank" class="source-tag" title="${s.label}">${truncate(s.label, 40)}</a>`).join('')}
+          ${story.sources.map(s => `<a href="${s.url}" target="_blank" class="source-tag">${truncate(s.label, 40)}</a>`).join('')}
         </div>
       </div>
-      <button class="btn-write" onclick="openModal(${i})">
-        ✍️ כתוב כתבה
-      </button>
+      <button class="btn-write" onclick="openModal(${i})">✍️ כתוב כתבה</button>
     </div>
   `).join('');
 }
 
-function truncate(str, n) {
-  return str.length > n ? str.substring(0, n) + '...' : str;
-}
-
-// ── Article generation ────────────────────────────────────────────────────────
+// ── Gemini article generation ─────────────────────────────────────────────────
 
 let currentStories = [];
 
-async function openModal(storyIndex) {
-  const story = currentStories[storyIndex];
+async function openModal(i) {
+  const story = currentStories[i];
   if (!story) return;
 
   const apiKey = loadKey();
@@ -631,18 +579,18 @@ async function openModal(storyIndex) {
     <div class="modal-generating">
       <div class="spinner"></div>
       <p>Gemini כותב את הכתבה...</p>
-      <p style="font-size:0.75rem; margin-top:8px; color: var(--muted)">זה לוקח כ-10 שניות</p>
+      <p style="font-size:0.75rem;margin-top:8px;color:var(--muted)">זה לוקח כ-10 שניות</p>
     </div>`;
   document.getElementById('modal-overlay').classList.add('open');
 
   try {
     const result = await generateArticle(story, apiKey);
-    renderArticle(result, story.title);
+    renderArticle(result);
   } catch (e) {
     document.getElementById('modal-body').innerHTML = `
       <div class="modal-generating">
-        <p style="color: var(--accent2)">❌ שגיאה: ${e.message}</p>
-        <p style="font-size:0.8rem; margin-top:8px; color: var(--muted)">בדוק שהמפתח תקין ונסה שוב.</p>
+        <p style="color:var(--accent2)">❌ שגיאה: ${e.message}</p>
+        <p style="font-size:0.8rem;margin-top:8px;color:var(--muted)">בדוק שהמפתח תקין ונסה שוב.</p>
       </div>`;
   }
 }
@@ -652,18 +600,16 @@ async function generateArticle(story, apiKey) {
     `TITLE: ${item.title}\nSNIPPET: ${item.snippet || ''}\nURL: ${item.link}`
   ).join('\n\n');
 
-  const prompt = `
-אתה כותב תוכן SEO מקצועי לאתר חדשות קרוזים בעברית.
+  const prompt = `אתה כותב תוכן SEO מקצועי לאתר חדשות קרוזים בעברית.
 
 בסיס הסיפור:
 ${story.title}
 
 ${story.summary}
 
-${context ? `מקורות נוספים:\n${context}` : ''}
+${context ? `מקורות:\n${context}` : ''}
 
-המשימה:
-צור תוכן בפורמט JSON בלבד (ללא קוד markdown, ללא בקטיקים, רק JSON גולמי):
+המשימה: צור תוכן בפורמט JSON בלבד — ללא markdown, ללא קוד, רק JSON גולמי:
 
 {
   "titles": [
@@ -671,64 +617,56 @@ ${context ? `מקורות נוספים:\n${context}` : ''}
     "כותרת שנייה — זווית שונה",
     "כותרת שלישית — יצירתית ומושכת"
   ],
-  "article": "כתבה מלאה בעברית עם כותרת ראשית (H1), כותרות משנה (H2), פסקאות מפורטות. לפחות 400 מילים. SEO מותאם לתחום הקרוזים.",
-  "tags": "תג1, תג2, תג3, תג4, תג5, תג6",
+  "article": "כתבה מלאה בעברית. כותרת H1, כותרות H2, פסקאות. לפחות 400 מילים. SEO מותאם לקרוזים.",
+  "tags": "תג1, תג2, תג3, תג4, תג5",
   "meta": "תיאור מטא SEO עד 160 תווים בעברית"
 }
 
-חוקים:
-- הכל בעברית
-- הכתבה צריכה להיות מעניינת, אינפורמטיבית, SEO friendly
-- המטא תיאור: עד 160 תווים בדיוק
-- התגים: 5-8 תגים רלוונטיים
-- אל תצרף שום הסבר מחוץ ל-JSON
-`;
+חוקים: הכל בעברית. אל תצרף שום טקסט מחוץ ל-JSON.`;
 
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+
+  const resp = await fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 1000,
-      system: 'You are a Hebrew SEO content writer. Always respond with raw JSON only, no markdown.',
-      messages: [{ role: 'user', content: prompt }]
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 2048 }
     })
   });
 
   if (!resp.ok) {
     const err = await resp.json();
-    throw new Error(err.error?.message || resp.statusText);
+    throw new Error(err.error?.message || `HTTP ${resp.status}`);
   }
 
   const data = await resp.json();
-  const text = data.content.map(b => b.text || '').join('');
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
   try {
     const clean = text.replace(/```json|```/g, '').trim();
     return JSON.parse(clean);
   } catch {
-    throw new Error('התגובה מה-AI לא הייתה בפורמט תקין. נסה שוב.');
+    throw new Error('התגובה מ-Gemini לא הייתה בפורמט JSON תקין. נסה שוב.');
   }
 }
 
-function renderArticle(result, storyTitle) {
-  const titlesHtml = (result.titles || []).map((t, i) => `
+// ── Render article ────────────────────────────────────────────────────────────
+
+function renderArticle(result) {
+  const titlesHtml = (result.titles || []).map(t => `
     <div class="title-option">
       <span>${t}</span>
       <button class="btn-copy" onclick="copyText(this, \`${escapeJs(t)}\`)">העתק</button>
-    </div>
-  `).join('');
+    </div>`).join('');
 
   const metaLen = (result.meta || '').length;
 
   document.getElementById('modal-body').innerHTML = `
     <div class="article-section">
-      <div class="article-section-label">
-        3 אפשרויות כותרת
-      </div>
+      <div class="article-section-label">3 אפשרויות כותרת</div>
       <div class="titles-list">${titlesHtml}</div>
     </div>
-
     <div class="article-section">
       <div class="article-section-label">
         כתבה מלאה
@@ -736,7 +674,6 @@ function renderArticle(result, storyTitle) {
       </div>
       <div class="article-content">${result.article || ''}</div>
     </div>
-
     <div class="article-section">
       <div class="article-section-label">
         תגיות
@@ -744,7 +681,6 @@ function renderArticle(result, storyTitle) {
       </div>
       <div class="tags-box">${result.tags || ''}</div>
     </div>
-
     <div class="article-section">
       <div class="article-section-label">
         Meta Description
@@ -754,61 +690,43 @@ function renderArticle(result, storyTitle) {
         ${result.meta || ''}
         <div class="meta-char-count">${metaLen} תווים ${metaLen > 160 ? '⚠️ ארוך מדי' : '✅'}</div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
-function escapeJs(str) {
-  return (str || '').replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\$/g, '\\$');
-}
+// ── Copy ──────────────────────────────────────────────────────────────────────
 
 function copyText(btn, text) {
   navigator.clipboard.writeText(text).then(() => {
     btn.textContent = '✅ הועתק';
     btn.classList.add('copied');
-    setTimeout(() => {
-      btn.textContent = 'העתק';
-      btn.classList.remove('copied');
-    }, 2000);
+    setTimeout(() => { btn.textContent = 'העתק'; btn.classList.remove('copied'); }, 2000);
   });
 }
 
-function closeModal() {
-  document.getElementById('modal-overlay').classList.remove('open');
-}
+// ── Modal ─────────────────────────────────────────────────────────────────────
 
-function handleOverlayClick(e) {
-  if (e.target === document.getElementById('modal-overlay')) closeModal();
-}
-
+function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
+function handleOverlayClick(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 
 async function init() {
   initKey();
-
   const digest = await loadDigest();
 
-  // Update masthead date
-  const dateStr = digest?.date || null;
-  document.getElementById('masthead-date').innerHTML =
-    `<div>${hebrewDate(dateStr)}</div><div>${digest ? (digest.items?.length || 0) + ' פריטים שנאספו' : 'אין נתונים'}</div>`;
+  document.getElementById('masthead-date').innerHTML = digest
+    ? `<div>${hebrewDate(digest.date)}</div><div>${digest.items?.length || 0} פריטים שנאספו</div>`
+    : `<div>${hebrewDate()}</div><div>אין נתונים</div>`;
 
   if (!digest) {
-    document.getElementById('stories-container').innerHTML = `
-      <div class="empty">
-        <h3>לא נמצא digest.json</h3>
-        <p>הרץ את main.py כדי לייצר את הדיגסט הראשון.</p>
-      </div>`;
+    document.getElementById('stories-container').innerHTML =
+      `<div class="empty"><h3>לא נמצא digest.json</h3><p>הרץ את main.py כדי לייצר את הדיגסט הראשון.</p></div>`;
     document.getElementById('ai-summary').textContent = 'אין נתונים.';
     return;
   }
 
-  // Show AI summary in sidebar
   document.getElementById('ai-summary').textContent = digest.summary || 'אין סיכום.';
-
-  // Parse and render stories
   currentStories = parseStories(digest.summary, digest.items || []);
   renderStories(currentStories);
 }
