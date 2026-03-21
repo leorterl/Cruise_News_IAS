@@ -29,8 +29,26 @@
   --radius:   10px;
   --radius-sm:6px;
 }
+body.light {
+  --bg:       #f4f6fa;
+  --surface:  #ffffff;
+  --surface2: #edf0f7;
+  --border:   #d1d9ea;
+  --text:     #1a2035;
+  --muted:    #7a88aa;
+  --gold:     #d4920a;
+  --gold-dim: rgba(212,146,10,0.1);
+  --teal:     #0e9e88;
+  --teal-dim: rgba(14,158,136,0.1);
+  --red:      #dc2626;
+  --green:    #16a34a;
+  --ias:      #2563eb;
+  --ias-dim:  rgba(37,99,235,0.1);
+  --cin:      #7c3aed;
+  --cin-dim:  rgba(124,58,237,0.1);
+}
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; transition: background 0.2s, color 0.2s; }
 
 /* ── Top bar ── */
 .topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0 28px; height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 20px; position: sticky; top: 0; z-index: 50; }
@@ -160,6 +178,29 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
 .btn-cancel { padding: 8px 16px; background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--muted); font-family: 'Outfit', sans-serif; font-size: 0.8rem; cursor: pointer; }
 .btn-primary { padding: 8px 20px; background: var(--gold); color: #1a1200; border: none; border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 0.8rem; cursor: pointer; }
 
+/* ── Tabs ── */
+.tabs { display: flex; gap: 4px; margin-bottom: 28px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+.tab-btn { padding: 9px 20px; background: none; border: none; border-bottom: 2px solid transparent; font-family: 'Outfit', sans-serif; font-size: 0.82rem; font-weight: 600; color: var(--muted); cursor: pointer; transition: all 0.15s; margin-bottom: -1px; }
+.tab-btn:hover { color: var(--text); }
+.tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── Sources tab ── */
+.sources-grid { display: flex; flex-direction: column; gap: 8px; }
+.source-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; transition: border-color 0.15s; }
+.source-row:hover { border-color: #3a4a66; }
+.source-row-left { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.source-row-title { font-size: 0.85rem; font-weight: 500; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.source-row-meta { display: flex; align-items: center; gap: 8px; }
+.source-row-site { font-size: 0.65rem; background: var(--surface2); color: var(--muted); padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+.source-row-link { font-size: 0.65rem; color: var(--teal); text-decoration: none; direction: ltr; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 320px; opacity: 0.8; }
+.source-row-link:hover { opacity: 1; }
+.sources-filter { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
+.sources-filter input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 12px; color: var(--text); font-family: 'Outfit', sans-serif; font-size: 0.8rem; direction: rtl; }
+.sources-filter input:focus { outline: none; border-color: var(--gold); }
+.sources-count { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -179,6 +220,7 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
     <span class="key-badge" id="key-badge">לא נשמר</span>
   </div>
   <button class="btn-settings" onclick="openSettings()">⚙️ הגדרות סיומות</button>
+  <button class="btn-settings" id="theme-toggle" onclick="toggleTheme()">☀️</button>
 </div>
 
 <div class="shell">
@@ -194,8 +236,27 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
       <div class="page-date" id="page-date">טוען<span>...</span></div>
       <div class="page-count" id="page-count"></div>
     </div>
-    <div id="stories-container">
-      <div class="loading"><div class="spinner"></div>טוען חדשות...</div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-digest" onclick="switchTab('digest')">📰 סיפורים</button>
+      <button class="tab-btn" id="tab-sources" onclick="switchTab('sources')">🔗 מקורות מהיום</button>
+    </div>
+
+    <div class="tab-panel active" id="panel-digest">
+      <div id="stories-container">
+        <div class="loading"><div class="spinner"></div>טוען חדשות...</div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="panel-sources">
+      <div class="sources-filter">
+        <input type="text" id="sources-search" placeholder="חפש לפי כותרת או אתר..." oninput="filterSources()">
+        <span class="sources-count" id="sources-count"></span>
+      </div>
+      <div class="sources-grid" id="sources-grid">
+        <div class="loading"><div class="spinner"></div>טוען מקורות...</div>
+      </div>
     </div>
   </main>
 </div>
@@ -387,6 +448,9 @@ async function loadAndRender(iso) {
   dateEl.innerHTML = `${parts[0]} <span>${parts.slice(1).join(' ')}</span>`;
   currentStories = parseStories(digest.summary, digest.items || []);
   countEl.textContent = `${currentStories.length} סיפורים`;
+
+  // Populate sources tab with all raw items from digest
+  renderSources(digest.items || []);
   if (!currentStories.length) { container.innerHTML = `<div class="empty"><h3>לא נמצאו חדשות</h3><p>נסה תאריך אחר.</p></div>`; return; }
 
   // Per-card site state
@@ -690,9 +754,108 @@ function closeModal() { document.getElementById('modal-overlay').classList.remov
 function handleOverlayClick(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeSettings(); } });
 
+// ── Theme ─────────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const light = document.body.classList.toggle('light');
+  localStorage.setItem('theme', light ? 'light' : 'dark');
+  document.getElementById('theme-toggle').textContent = light ? '🌙' : '☀️';
+}
+function initTheme() {
+  if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light');
+    document.getElementById('theme-toggle').textContent = '🌙';
+  }
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.getElementById('panel-' + tab).classList.add('active');
+}
+
+// ── Sources tab ───────────────────────────────────────────────────────────────
+let allSourceItems = [];
+
+function renderSources(items) {
+  allSourceItems = items || [];
+  updateSourcesGrid(allSourceItems);
+}
+
+function filterSources() {
+  const q = document.getElementById('sources-search').value.trim().toLowerCase();
+  if (!q) { updateSourcesGrid(allSourceItems); return; }
+  const filtered = allSourceItems.filter(item =>
+    (item.title || '').toLowerCase().includes(q) ||
+    (item.source || '').toLowerCase().includes(q) ||
+    (item.link || '').toLowerCase().includes(q)
+  );
+  updateSourcesGrid(filtered);
+}
+
+function updateSourcesGrid(items) {
+  const grid = document.getElementById('sources-grid');
+  const countEl = document.getElementById('sources-count');
+  countEl.textContent = `${items.length} קישורים`;
+
+  if (!items.length) {
+    grid.innerHTML = `<div class="empty"><h3>אין תוצאות</h3></div>`;
+    return;
+  }
+
+  grid.innerHTML = '';
+  items.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'source-row';
+
+    const left = document.createElement('div');
+    left.className = 'source-row-left';
+
+    const title = document.createElement('div');
+    title.className = 'source-row-title';
+    title.textContent = item.title || item.link;
+    title.title = item.title || '';
+
+    const meta = document.createElement('div');
+    meta.className = 'source-row-meta';
+
+    if (item.source) {
+      const site = document.createElement('span');
+      site.className = 'source-row-site';
+      site.textContent = item.source;
+      meta.appendChild(site);
+    }
+
+    const link = document.createElement('a');
+    link.className = 'source-row-link';
+    link.href = item.link;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = item.link;
+    meta.appendChild(link);
+
+    left.appendChild(title);
+    left.appendChild(meta);
+
+    const openBtn = document.createElement('a');
+    openBtn.href = item.link;
+    openBtn.target = '_blank';
+    openBtn.rel = 'noopener';
+    openBtn.className = 'btn-sm';
+    openBtn.style.cssText = 'padding:5px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--muted);font-size:0.7rem;text-decoration:none;white-space:nowrap;transition:all 0.15s;';
+    openBtn.textContent = '↗ פתח';
+
+    row.appendChild(left);
+    row.appendChild(openBtn);
+    grid.appendChild(row);
+  });
+}
+
 // ── Init ──────────────────────────────────────────────────────────────────────
 async function init() {
   initKey();
+  initTheme();
   buildDateNav();
   loadAndRender(activeDate);
 }
