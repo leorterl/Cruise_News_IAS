@@ -51,7 +51,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add seen_links.json digest.json digest-*.json
+          git add seen_links.json digests/
           git diff --cached --quiet || git commit -m "chore: update digest [skip ci]"
           git push
         env:
