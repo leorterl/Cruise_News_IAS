@@ -371,7 +371,9 @@ function fullDate(iso) { return new Date(iso).toLocaleDateString('he-IL', { week
 const digestCache = {};
 async function fetchDigest(iso) {
   if (digestCache[iso]) return digestCache[iso];
-  const url = iso === dateStr(0) ? `./digest.json?t=${Date.now()}` : `./digest-${iso}.json`;
+  const url = iso === dateStr(0)
+    ? `./digests/digest.json?t=${Date.now()}`
+    : `./digests/digest-${iso}.json`;
   try { const r = await fetch(url); if (!r.ok) return null; const d = await r.json(); digestCache[iso] = d; return d; }
   catch { return null; }
 }
