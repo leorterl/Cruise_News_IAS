@@ -405,11 +405,12 @@ def _extract_pub_date(soup: BeautifulSoup, url: str) -> datetime | None:
     Try multiple strategies to find an article's publication date.
     Returns a timezone-aware datetime or None if not found.
 
-    Strategy order (fastest/most reliable first):
-      1. <meta> Open Graph / schema tags  — present on most modern news sites
-      2. <time datetime="..."> elements   — semantic HTML
-      3. JSON-LD structured data          — Google-friendly schema
-      4. URL date pattern                 — e.g. /2026/03/21/ or /2026-03-21
+    Strategy order:
+      1. <meta> Open Graph / schema tags
+      2. <time datetime="..."> elements
+      3. JSON-LD structured data
+      4. URL date pattern  e.g. /2026/03/21/
+      5. Dateline in article text  e.g. "MIAMI, March 11, 2026" or "June 17, 2025"
     """
     import re, json as _json
 
@@ -426,7 +427,7 @@ def _extract_pub_date(soup: BeautifulSoup, url: str) -> datetime | None:
             if d:
                 return d
 
-    # 2. <time> element with datetime attribute
+    # 2. <time> element
     for time_el in soup.find_all("time", datetime=True):
         d = _try_parse_iso(time_el["datetime"])
         if d:
@@ -446,12 +447,41 @@ def _extract_pub_date(soup: BeautifulSoup, url: str) -> datetime | None:
         except Exception:
             pass
 
-    # 4. URL pattern — matches /2025/08/14/ or /2025-08-14 or ?date=2025-08-14
+    # 4. URL pattern  /2025/08/14/ or /2025-08-14
     m = re.search(r'[/_-](\d{4})[/_-](0[1-9]|1[0-2])[/_-](0[1-9]|[12]\d|3[01])', url)
     if m:
         try:
             return datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)),
                             tzinfo=timezone.utc)
+        except ValueError:
+            pass
+
+    # 5. Dateline in article body text
+    # Catches patterns like:
+    #   "MIAMI, March 11, 2026"
+    #   "SEATTLE, June 17, 2025 –"
+    #   "Geneva, Switzerland – February 26, 2026"
+    #   "March 21, 2026" (standalone)
+    MONTHS = {
+        "january":1,"february":2,"march":3,"april":4,"may":5,"june":6,
+        "july":7,"august":8,"september":9,"october":10,"november":11,"december":12,
+        "jan":1,"feb":2,"mar":3,"apr":4,"jun":6,"jul":7,"aug":8,
+        "sep":9,"oct":10,"nov":11,"dec":12,
+    }
+    # Search first 2000 chars of body text only — datelines always appear near the top
+    body_text = soup.get_text(" ")[:2000]
+    # Pattern: optional city prefix, then "Month D, YYYY" or "Month DD, YYYY"
+    date_pat = re.compile(
+        r'\b(' + '|'.join(MONTHS.keys()) + r')\w*\.?\s+(\d{1,2}),?\s+(20\d{2})\b',
+        re.IGNORECASE
+    )
+    m = date_pat.search(body_text)
+    if m:
+        try:
+            month = MONTHS[m.group(1).lower()[:3]]
+            day   = int(m.group(2))
+            year  = int(m.group(3))
+            return datetime(year, month, day, tzinfo=timezone.utc)
         except ValueError:
             pass
 
