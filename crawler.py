@@ -155,7 +155,7 @@ def _scrape_rss(site, headers, timeout, cutoff, seen_links) -> list[Article]:
         if not url or not title or url in seen_links:
             continue
 
-        content = _fetch_article_content(url, site, headers, timeout)
+        content, _ = _fetch_article_content(url, site, headers, timeout)
         if not content:
             content = _extract_feed_content(entry)
 
@@ -198,11 +198,12 @@ def _scrape_html(site, headers, timeout, cutoff, seen_links) -> list[Article]:
         if len(title) < 10:
             continue
 
-        content = _fetch_article_content(url, site, headers, timeout)
+        content, pub_date = _fetch_article_content(url, site, headers, timeout, cutoff)
         if not content:
             continue
 
-        articles.append(Article(title=title, url=url, content=content, source=site["name"]))
+        articles.append(Article(title=title, url=url, content=content,
+                                source=site["name"], published_date=pub_date))
         if len(articles) >= max_per_site:
             break
 
@@ -265,15 +266,21 @@ def _scrape_stealth(site, timeout, cutoff, seen_links) -> list[Article]:
         try:
             art_resp = cffi.get(url, impersonate="chrome", timeout=timeout)
             art_soup = BeautifulSoup(art_resp.text, "html.parser")
+            pub_date = _extract_pub_date(art_soup, url)
+            if cutoff and pub_date and pub_date < cutoff:
+                logger.debug(f"Skipping old article ({pub_date.date()}): {url}")
+                continue
             content  = _extract_content(art_soup, site.get("content_selector"))
         except Exception as e:
             logger.warning(f"[{site['name']}] failed to fetch {url}: {e}")
             content = ""
+            pub_date = None
 
         if not content:
             continue
 
-        articles.append(Article(title=title, url=url, content=content, source=site["name"]))
+        articles.append(Article(title=title, url=url, content=content,
+                                source=site["name"], published_date=pub_date))
         if len(articles) >= max_per_site:
             break
 
@@ -348,6 +355,15 @@ def _scrape_playwright_batch(sites, cutoff, seen_links) -> list[Article]:
                     try:
                         page.goto(href, timeout=20000, wait_until="domcontentloaded")
                         page.wait_for_timeout(1500)
+
+                        # Extract publication date from meta tags before fetching full content
+                        page_html = page.content()
+                        art_soup = BeautifulSoup(page_html, "html.parser")
+                        pub_date = _extract_pub_date(art_soup, href)
+                        if cutoff and pub_date and pub_date < cutoff:
+                            logger.debug(f"[{name}] Skipping old article ({pub_date.date()}): {href}")
+                            continue
+
                         content_sel = site.get("content_selector", "article p")
                         paragraphs  = page.eval_on_selector_all(
                             content_sel, "els => els.map(el => el.textContent.trim())"
@@ -357,6 +373,7 @@ def _scrape_playwright_batch(sites, cutoff, seen_links) -> list[Article]:
                             articles.append(Article(
                                 title=title, url=href,
                                 content=content, source=name,
+                                published_date=pub_date,
                             ))
                             site_count += 1
                     except Exception as e:
@@ -383,15 +400,102 @@ def _resolve_url(href: str, site: dict) -> str:
     return urljoin(site["url"], href)
 
 
-def _fetch_article_content(url: str, site: dict, headers: dict, timeout: int) -> str:
+def _extract_pub_date(soup: BeautifulSoup, url: str) -> datetime | None:
+    """
+    Try multiple strategies to find an article's publication date.
+    Returns a timezone-aware datetime or None if not found.
+
+    Strategy order (fastest/most reliable first):
+      1. <meta> Open Graph / schema tags  — present on most modern news sites
+      2. <time datetime="..."> elements   — semantic HTML
+      3. JSON-LD structured data          — Google-friendly schema
+      4. URL date pattern                 — e.g. /2026/03/21/ or /2026-03-21
+    """
+    import re, json as _json
+
+    # 1. Meta tags
+    for prop in (
+        "article:published_time", "article:modified_time",
+        "og:updated_time", "datePublished", "pubdate",
+    ):
+        tag = soup.find("meta", attrs={"property": prop}) or \
+              soup.find("meta", attrs={"name": prop}) or \
+              soup.find("meta", attrs={"itemprop": prop})
+        if tag and tag.get("content"):
+            d = _try_parse_iso(tag["content"])
+            if d:
+                return d
+
+    # 2. <time> element with datetime attribute
+    for time_el in soup.find_all("time", datetime=True):
+        d = _try_parse_iso(time_el["datetime"])
+        if d:
+            return d
+
+    # 3. JSON-LD
+    for script in soup.find_all("script", type="application/ld+json"):
+        try:
+            data = _json.loads(script.string or "")
+            if isinstance(data, list):
+                data = data[0]
+            for key in ("datePublished", "dateModified", "uploadDate"):
+                if key in data:
+                    d = _try_parse_iso(data[key])
+                    if d:
+                        return d
+        except Exception:
+            pass
+
+    # 4. URL pattern — matches /2025/08/14/ or /2025-08-14 or ?date=2025-08-14
+    m = re.search(r'[/_-](\d{4})[/_-](0[1-9]|1[0-2])[/_-](0[1-9]|[12]\d|3[01])', url)
+    if m:
+        try:
+            return datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)),
+                            tzinfo=timezone.utc)
+        except ValueError:
+            pass
+
+    return None
+
+
+def _try_parse_iso(s: str) -> datetime | None:
+    """Parse an ISO-8601 date string into a UTC-aware datetime."""
+    import re
+    if not s:
+        return None
+    # Normalise: remove fractional seconds, handle Z
+    s = re.sub(r'\.\d+', '', s.strip()).replace('Z', '+00:00')
+    for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%dT%H:%M%z", "%Y-%m-%d"):
+        try:
+            d = datetime.strptime(s[:len(fmt) + 6], fmt)
+            if d.tzinfo is None:
+                d = d.replace(tzinfo=timezone.utc)
+            return d
+        except ValueError:
+            continue
+    return None
+
+
+def _fetch_article_content(url: str, site: dict, headers: dict, timeout: int,
+                            cutoff: datetime | None = None) -> tuple[str, datetime | None]:
+    """
+    Fetch an article page. Returns (content, pub_date).
+    If cutoff is given and the article is older, returns ("", pub_date) so the
+    caller can skip it without re-fetching.
+    """
     try:
         resp = requests.get(url, headers=headers, timeout=timeout)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
-        return _extract_content(soup, site.get("content_selector"))
+        pub_date = _extract_pub_date(soup, url)
+        if cutoff and pub_date and pub_date < cutoff:
+            logger.debug(f"Skipping old article ({pub_date.date()}): {url}")
+            return "", pub_date
+        content = _extract_content(soup, site.get("content_selector"))
+        return content, pub_date
     except Exception as e:
         logger.warning(f"Failed to fetch {url}: {e}")
-        return ""
+        return "", None
 
 
 def _extract_content(soup: BeautifulSoup, content_selector: str | None) -> str:
