@@ -1,13 +1,15 @@
 import json
 import os
 from datetime import date, timedelta
+from pathlib import Path
 
 from crawler import collect
 from ai import summarize
 from send import send_message, send_link
 
 SEEN_FILE = "seen_links.json"
-DIGEST_FILE = "digest.json"
+DIGEST_DIR = Path("digests")
+DIGEST_FILE = DIGEST_DIR / "digest.json"
 DASHBOARD_URL = os.environ.get("DASHBOARD_URL", "https://YOUR_USERNAME.github.io/cruise-digest")
 
 
@@ -35,10 +37,8 @@ def mark_seen(seen: dict, new_items: list) -> dict:
 
 
 def save_digest(raw_items: list, ai_summary: str):
-    """
-    Save digest as both digest.json (latest) and digest-YYYY-MM-DD.json (history).
-    The dashboard sidebar uses the dated files to show past days.
-    """
+    """Save digest as both digests/digest.json (latest) and digests/digest-YYYY-MM-DD.json (history)."""
+    DIGEST_DIR.mkdir(exist_ok=True)
     today = str(date.today())
     digest = {
         "date": today,
@@ -47,13 +47,11 @@ def save_digest(raw_items: list, ai_summary: str):
     }
     payload = json.dumps(digest, ensure_ascii=False, indent=2)
 
-    # Always overwrite the "latest" file
     with open(DIGEST_FILE, "w", encoding="utf-8") as f:
         f.write(payload)
 
-    # Also save a dated copy for history (never overwritten)
-    dated_file = f"digest-{today}.json"
-    if not os.path.exists(dated_file):
+    dated_file = DIGEST_DIR / f"digest-{today}.json"
+    if not dated_file.exists():
         with open(dated_file, "w", encoding="utf-8") as f:
             f.write(payload)
 
