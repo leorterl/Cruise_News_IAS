@@ -103,7 +103,7 @@ sites:
   - name: "Princess Cruises"
     url: "https://www.princess.com/news/"
     type: "html"
-    listing_selector: "a[href*='/news/']"
+    listing_selector: "a[href*='/news/news-releases/'], a[href*='/news/articles/']"
     content_selector: "article p, .content p"
 
   # --- Stealth (curl_cffi - bypasses bot protection) ---
@@ -123,13 +123,13 @@ sites:
   - name: "CLIA (cruising.org) News"
     url: "https://cruising.org/news"
     type: "stealth"
-    listing_selector: "article a"
+    listing_selector: "article h3 a, article h4 a, .views-row a[href*='/news/']"
     content_selector: "article p, .content p, p"
 
   - name: "CLIA Resources"
     url: "https://cruising.org/resource-list"
     type: "stealth"
-    listing_selector: "article a"
+    listing_selector: "article h3 a, article h4 a, .views-row a[href*='/resources/']"
     content_selector: "article p, .content p, p"
 
   - name: "Cunard"
