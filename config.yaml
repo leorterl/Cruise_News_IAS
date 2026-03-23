@@ -73,6 +73,7 @@ sites:
     url: "https://www.hollandamerica.com/en/newsroom/newsfeed"
     type: "html"
     listing_selector: "a[href*='newsroom/newsfeed/']"
+    date_selector: ".cmp-text time, time, .article-date, .publish-date"
     content_selector: ".cmp-text p"
 
   - name: "Explora Journeys"
