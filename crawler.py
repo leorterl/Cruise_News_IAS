@@ -457,25 +457,28 @@ def _extract_pub_date(soup: BeautifulSoup, url: str) -> datetime | None:
             pass
 
     # 5. Dateline in article body text
-    # Catches patterns like:
-    #   "MIAMI, March 11, 2026"
-    #   "SEATTLE, June 17, 2025 –"
-    #   "Geneva, Switzerland – February 26, 2026"
-    #   "March 21, 2026" (standalone)
+    body_text = soup.get_text(" ")[:2000]
+    d = _try_parse_dateline(body_text)
+    if d:
+        return d
+
+    return None
+
+
+def _try_parse_dateline(text: str) -> datetime | None:
+    """Parse a human-readable dateline like 'March 11, 2026' or 'June 20, 2025'."""
+    import re
     MONTHS = {
         "january":1,"february":2,"march":3,"april":4,"may":5,"june":6,
         "july":7,"august":8,"september":9,"october":10,"november":11,"december":12,
         "jan":1,"feb":2,"mar":3,"apr":4,"jun":6,"jul":7,"aug":8,
         "sep":9,"oct":10,"nov":11,"dec":12,
     }
-    # Search first 2000 chars of body text only — datelines always appear near the top
-    body_text = soup.get_text(" ")[:2000]
-    # Pattern: optional city prefix, then "Month D, YYYY" or "Month DD, YYYY"
     date_pat = re.compile(
         r'\b(' + '|'.join(MONTHS.keys()) + r')\w*\.?\s+(\d{1,2}),?\s+(20\d{2})\b',
         re.IGNORECASE
     )
-    m = date_pat.search(body_text)
+    m = date_pat.search(text[:2000])
     if m:
         try:
             month = MONTHS[m.group(1).lower()[:3]]
@@ -484,11 +487,7 @@ def _extract_pub_date(soup: BeautifulSoup, url: str) -> datetime | None:
             return datetime(year, month, day, tzinfo=timezone.utc)
         except ValueError:
             pass
-
     return None
-
-
-def _try_parse_iso(s: str) -> datetime | None:
     """Parse an ISO-8601 date string into a UTC-aware datetime."""
     import re
     if not s:
@@ -510,17 +509,43 @@ def _fetch_article_content(url: str, site: dict, headers: dict, timeout: int,
                             cutoff: datetime | None = None) -> tuple[str, datetime | None]:
     """
     Fetch an article page. Returns (content, pub_date).
-    If cutoff is given and the article is older, returns ("", pub_date) so the
-    caller can skip it without re-fetching.
+    If cutoff is given and the article is older, returns ("", pub_date).
+    If no date can be found and cutoff is active, the article is skipped
+    unless the URL itself contains the current year.
     """
     try:
         resp = requests.get(url, headers=headers, timeout=timeout)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, "html.parser")
-        pub_date = _extract_pub_date(soup, url)
-        if cutoff and pub_date and pub_date < cutoff:
-            logger.debug(f"Skipping old article ({pub_date.date()}): {url}")
-            return "", pub_date
+
+        # Try date_selector from config first (site-specific override)
+        date_sel = site.get("date_selector")
+        pub_date = None
+        if date_sel:
+            for sel in date_sel.split(","):
+                el = soup.select_one(sel.strip())
+                if el:
+                    dt_attr = el.get("datetime") or el.get_text(strip=True)
+                    pub_date = _try_parse_iso(dt_attr) or _try_parse_dateline(dt_attr)
+                    if pub_date:
+                        break
+
+        if not pub_date:
+            pub_date = _extract_pub_date(soup, url)
+
+        if cutoff:
+            if pub_date:
+                if pub_date < cutoff:
+                    logger.debug(f"Skipping old article ({pub_date.date()}): {url}")
+                    return "", pub_date
+            else:
+                # No date found — only allow if current year appears in the URL
+                import re
+                current_year = str(datetime.now(timezone.utc).year)
+                if current_year not in url:
+                    logger.debug(f"Skipping undatable article (no year in URL): {url}")
+                    return "", None
+
         content = _extract_content(soup, site.get("content_selector"))
         return content, pub_date
     except Exception as e:
