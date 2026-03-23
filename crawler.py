@@ -267,9 +267,16 @@ def _scrape_stealth(site, timeout, cutoff, seen_links) -> list[Article]:
             art_resp = cffi.get(url, impersonate="chrome", timeout=timeout)
             art_soup = BeautifulSoup(art_resp.text, "html.parser")
             pub_date = _extract_pub_date(art_soup, url)
-            if cutoff and pub_date and pub_date < cutoff:
-                logger.debug(f"Skipping old article ({pub_date.date()}): {url}")
-                continue
+            if cutoff:
+                if pub_date:
+                    if pub_date < cutoff:
+                        logger.debug(f"Skipping old article ({pub_date.date()}): {url}")
+                        continue
+                else:
+                    current_year = str(datetime.now(timezone.utc).year)
+                    if current_year not in url:
+                        logger.debug(f"Skipping undatable article (no year in URL): {url}")
+                        continue
             content  = _extract_content(art_soup, site.get("content_selector"))
         except Exception as e:
             logger.warning(f"[{site['name']}] failed to fetch {url}: {e}")
@@ -344,6 +351,7 @@ def _scrape_playwright_batch(sites, cutoff, seen_links) -> list[Article]:
 
                 seen_urls: set[str] = set()
                 site_count = 0
+                current_year = str(datetime.now(timezone.utc).year)
 
                 for link_data in links[:max_per_site * 4]:
                     href  = link_data.get("href", "")
@@ -352,17 +360,31 @@ def _scrape_playwright_batch(sites, cutoff, seen_links) -> list[Article]:
                         continue
                     seen_urls.add(href)
 
+                    # Some sites (e.g. TravelPulse) embed date in the link text
+                    # e.g. "Sarah KutaMarch 17, 2026" — extract it before loading the page
+                    title_date = _try_parse_dateline(title)
+                    if cutoff and title_date and title_date < cutoff:
+                        logger.debug(f"[{name}] Skipping old article from title date ({title_date.date()}): {href}")
+                        continue
+
                     try:
                         page.goto(href, timeout=20000, wait_until="domcontentloaded")
                         page.wait_for_timeout(1500)
 
-                        # Extract publication date from meta tags before fetching full content
                         page_html = page.content()
                         art_soup = BeautifulSoup(page_html, "html.parser")
-                        pub_date = _extract_pub_date(art_soup, href)
-                        if cutoff and pub_date and pub_date < cutoff:
-                            logger.debug(f"[{name}] Skipping old article ({pub_date.date()}): {href}")
-                            continue
+                        pub_date = title_date or _extract_pub_date(art_soup, href)
+
+                        if cutoff:
+                            if pub_date:
+                                if pub_date < cutoff:
+                                    logger.debug(f"[{name}] Skipping old article ({pub_date.date()}): {href}")
+                                    continue
+                            else:
+                                # No date found anywhere — block unless current year is in URL
+                                if current_year not in href:
+                                    logger.debug(f"[{name}] Skipping undatable article (no year in URL): {href}")
+                                    continue
 
                         content_sel = site.get("content_selector", "article p")
                         paragraphs  = page.eval_on_selector_all(
