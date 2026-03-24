@@ -111,6 +111,11 @@ def _scrape_all(config: dict, seen_links: set) -> list[Article]:
         site_type = site.get("type", "html")
         name = site.get("name", site["url"])
 
+        # Allow per-site time window override (e.g. low-frequency sites)
+        site_window = site.get("time_window_hours")
+        site_cutoff = (datetime.now(timezone.utc) - timedelta(hours=site_window)
+                       if site_window else cutoff)
+
         # Playwright sites are batched together to reuse one browser instance
         if site_type == "playwright":
             playwright_sites.append(site)
@@ -118,11 +123,11 @@ def _scrape_all(config: dict, seen_links: set) -> list[Article]:
 
         try:
             if site_type == "rss":
-                articles = _scrape_rss(site, headers, timeout, cutoff, seen_links)
+                articles = _scrape_rss(site, headers, timeout, site_cutoff, seen_links)
             elif site_type == "stealth":
-                articles = _scrape_stealth(site, timeout, cutoff, seen_links)
+                articles = _scrape_stealth(site, timeout, site_cutoff, seen_links)
             else:
-                articles = _scrape_html(site, headers, timeout, cutoff, seen_links)
+                articles = _scrape_html(site, headers, timeout, site_cutoff, seen_links)
 
             all_articles.extend(articles)
             logger.info(f"[{name}] {len(articles)} articles")
