@@ -426,13 +426,6 @@ def _extract_pub_date(soup: BeautifulSoup, url: str) -> datetime | None:
     """
     Try multiple strategies to find an article's publication date.
     Returns a timezone-aware datetime or None if not found.
-
-    Strategy order:
-      1. <meta> Open Graph / schema tags
-      2. <time datetime="..."> elements
-      3. JSON-LD structured data
-      4. URL date pattern  e.g. /2026/03/21/
-      5. Dateline in article text  e.g. "MIAMI, March 11, 2026" or "June 17, 2025"
     """
     import re, json as _json
 
@@ -469,7 +462,7 @@ def _extract_pub_date(soup: BeautifulSoup, url: str) -> datetime | None:
         except Exception:
             pass
 
-    # 4. URL pattern  /2025/08/14/ or /2025-08-14
+    # 4. URL ISO date pattern  /2026/03/21/ or /2026-03-21
     m = re.search(r'[/_-](\d{4})[/_-](0[1-9]|1[0-2])[/_-](0[1-9]|[12]\d|3[01])', url)
     if m:
         try:
@@ -478,11 +471,74 @@ def _extract_pub_date(soup: BeautifulSoup, url: str) -> datetime | None:
         except ValueError:
             pass
 
-    # 5. Dateline in article body text
-    body_text = soup.get_text(" ")[:2000]
-    d = _try_parse_dateline(body_text)
-    if d:
-        return d
+    # 4b. URL month-name pattern used by Seabourn, Princess etc.
+    # e.g. /2026-press-releases/march/article-slug or /press-releases/2026/march/
+    MONTH_NAMES = {
+        "january":1,"february":2,"march":3,"april":4,"may":5,"june":6,
+        "july":7,"august":8,"september":9,"october":10,"november":11,"december":12,
+    }
+    m = re.search(
+        r'[/_-](20\d{2})[/_-]?(?:press-releases[/_-]?)?(january|february|march|april|may|june|july|august|september|october|november|december)[/_-]',
+        url, re.IGNORECASE
+    )
+    if m:
+        try:
+            year  = int(m.group(1))
+            month = MONTH_NAMES[m.group(2).lower()]
+            return datetime(year, month, 1, tzinfo=timezone.utc)
+        except (ValueError, KeyError):
+            pass
+
+    # 4c. MMDDYYYY concatenated at end of URL slug (Holland America style)
+    # e.g. Holland-America-Line-World-Traveler-Lewie-01262026
+    m = re.search(r'-(0[1-9]|1[0-2])(0[1-9]|[12]\d|3[01])(20\d{2})(?:[/_-]|$)', url)
+    if m:
+        try:
+            return datetime(int(m.group(3)), int(m.group(1)), int(m.group(2)),
+                            tzinfo=timezone.utc)
+        except ValueError:
+            pass
+
+    # 5. Press-release dateline in article body — look for "CITY, Month DD, YYYY–"
+    # This specifically targets the press release format and avoids promotional dates
+    # like "Book by May 5, 2026" or "Available through March 1, 2026"
+    body_text = soup.get_text(" ")[:3000]
+
+    # First pass: strict dateline — "WORD(S), Month D, YYYY" followed by em/en dash or newline
+    # This matches "SEATTLE, March 4, 2026–" but not "through May 5, 2026"
+    strict_pat = re.compile(
+        r'\b[A-Z][A-Za-z\s,]+,\s+'
+        r'(January|February|March|April|May|June|July|August|September|October|November|December)'
+        r'\s+(\d{1,2}),?\s+(20\d{2})\s*[–—-]',
+        re.IGNORECASE
+    )
+    m = strict_pat.search(body_text)
+    if m:
+        try:
+            month = MONTH_NAMES[m.group(1).lower()]
+            return datetime(int(m.group(3)), month, int(m.group(2)), tzinfo=timezone.utc)
+        except (ValueError, KeyError):
+            pass
+
+    # Second pass: fallback dateline without requiring city prefix
+    # but exclude dates preceded by "through", "by", "until", "before", "after", "from"
+    loose_pat = re.compile(
+        r'(?<!through\s)(?<!by\s)(?<!until\s)(?<!before\s)(?<!from\s)'
+        r'\b(January|February|March|April|May|June|July|August|September|October|November|December)'
+        r'\s+(\d{1,2}),?\s+(20\d{2})\b',
+        re.IGNORECASE
+    )
+    for m in loose_pat.finditer(body_text):
+        # Skip if preceded by booking/promo language
+        start = max(0, m.start() - 30)
+        context = body_text[start:m.start()].lower()
+        if any(w in context for w in ("through", " by ", "until", "before", "from", "available", "book")):
+            continue
+        try:
+            month = MONTH_NAMES[m.group(1).lower()]
+            return datetime(int(m.group(3)), month, int(m.group(2)), tzinfo=timezone.utc)
+        except (ValueError, KeyError):
+            continue
 
     return None
 
