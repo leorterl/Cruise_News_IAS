@@ -12,11 +12,18 @@ sites:
     rss_url: "https://www.royalcaribbeanblog.com/rss.xml"
     content_selector: ".field-item p"
 
-  - name: "Travel and Tour World"
+  - name: "Travel and Tour World (RSS)"
     url: "https://www.travelandtourworld.com/news/article/category/cruise-news/"
     type: "rss"
     rss_url: "https://www.travelandtourworld.com/news/article/category/cruise-news/feed/"
     content_selector: ".details p, article p"
+
+  - name: "Travel and Tour World (HTML)"
+    url: "https://www.travelandtourworld.com/news/article/category/cruise-news/"
+    type: "html"
+    listing_selector: "h2.entry-title a, h3.entry-title a, .jeg_post_title a, article h2 a, article h3 a"
+    content_selector: ".content-inner p, .jeg_content p, article p"
+    max_articles: 8
 
   - name: "NCLH Press Releases"
     url: "https://www.nclhltd.com/news-media/press-releases"
@@ -28,13 +35,14 @@ sites:
   - name: "Cruise Fever"
     url: "https://cruisefever.net/"
     type: "html"
-    listing_selector: ".entry-title a"
-    content_selector: ".td-post-content p"
+    listing_selector: "h3 a[href*='cruisefever.net'], h2 a[href*='cruisefever.net']"
+    content_selector: ".td-post-content p, .tdb-block-inner p, article p"
+    time_window_hours: 72
 
   - name: "Cruise Industry News"
     url: "https://cruiseindustrynews.com/cruise-news/"
-    type: "html"
-    listing_selector: ".elementor-post__title a"
+    type: "stealth"
+    listing_selector: "h2 a, h3 a, .elementor-post__title a, article a[href*='cruiseindustrynews.com/202']"
     content_selector: ".elementor-widget-theme-post-content p, article p"
 
   - name: "Carnival News"
@@ -88,6 +96,12 @@ sites:
     listing_selector: ".c33_aside a"
     title_selector: "h6.c33_subtitle"
     content_selector: "article p"
+
+  - name: "USA Today Cruises"
+    url: "https://www.usatoday.com/travel/cruises/"
+    type: "stealth"
+    listing_selector: "a[href*='usatoday.com/story/travel/cruise']"
+    content_selector: ".gnt_ar_b p, article p"
 
   - name: "Disney Cruise Line"
     url: "https://disneyexperiences.com/dcl-press/release/"
