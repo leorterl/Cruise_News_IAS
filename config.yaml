@@ -1,6 +1,6 @@
 settings:
   time_window_hours: 24
-  max_articles: 3
+  max_articles: 5
   request_timeout: 15
   user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
@@ -21,9 +21,9 @@ sites:
   - name: "Travel and Tour World (HTML)"
     url: "https://www.travelandtourworld.com/news/article/category/cruise-news/"
     type: "html"
-    listing_selector: "h2.entry-title a, h3.entry-title a, .jeg_post_title a, article h2 a, article h3 a"
-    content_selector: ".content-inner p, .jeg_content p, article p"
-    max_articles: 8
+    listing_selector: "h2 a[href*='travelandtourworld.com'], h3 a[href*='travelandtourworld.com']"
+    content_selector: "article p, .entry-content p"
+    max_articles: 10
 
   - name: "NCLH Press Releases"
     url: "https://www.nclhltd.com/news-media/press-releases"
@@ -33,17 +33,17 @@ sites:
 
   # --- Tier 2: HTML Scraping ---
   - name: "Cruise Fever"
-    url: "https://cruisefever.net/"
+    url: "https://cruisefever.net/category/cruise-news/"
     type: "html"
     listing_selector: "h3 a[href*='cruisefever.net'], h2 a[href*='cruisefever.net']"
     content_selector: ".td-post-content p, .tdb-block-inner p, article p"
     time_window_hours: 72
 
-  - name: "Cruise Industry News"
-    url: "https://cruiseindustrynews.com/cruise-news/"
-    type: "stealth"
-    listing_selector: "h2 a, h3 a, .elementor-post__title a, article a[href*='cruiseindustrynews.com/202']"
-    content_selector: ".elementor-widget-theme-post-content p, article p"
+  - name: "Carnival Corp"
+    url: "https://www.carnivalcorp.com/media-center/news-releases/"
+    type: "playwright"
+    listing_selector: "article a, h2 a, h3 a, .news-title a"
+    content_selector: "article p, .press-release p, .entry-content p"
 
   - name: "Carnival News"
     url: "https://www.carnival-news.com/news"
@@ -72,10 +72,10 @@ sites:
     url_prefix: "https://www.mscpressarea.com/en_US"
 
   - name: "Carnival Corp"
-    url: "https://www.carnivalcorp.com/media-center"
-    type: "html"
-    listing_selector: "article a"
-    content_selector: "article p, .press-release p"
+    url: "https://www.carnivalcorp.com/media-center/news-releases/"
+    type: "playwright"
+    listing_selector: "article a, h2 a, h3 a, .news-title a"
+    content_selector: "article p, .press-release p, .entry-content p"
 
   - name: "Holland America"
     url: "https://www.hollandamerica.com/en/newsroom/newsfeed"
@@ -166,6 +166,12 @@ sites:
     content_selector: "article p, .entry-content p"
 
   # --- Playwright (JS-rendered SPAs) ---
+  - name: "Cruise Industry News"
+    url: "https://cruiseindustrynews.com/cruise-news/"
+    type: "playwright"
+    listing_selector: "h2 a[href*='cruiseindustrynews.com/202'], h3 a[href*='cruiseindustrynews.com/202'], .elementor-post__title a"
+    content_selector: ".elementor-widget-theme-post-content p, article p"
+
   - name: "NCL Newsroom"
     url: "https://www.ncl.com/newsroom/en-us/"
     type: "playwright"
