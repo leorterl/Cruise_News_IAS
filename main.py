@@ -18,10 +18,14 @@ DASHBOARD_URL = os.environ.get("DASHBOARD_URL", "https://YOUR_USERNAME.github.io
 def load_seen() -> dict:
     if not os.path.exists(SEEN_FILE):
         return {}
-    with open(SEEN_FILE) as f:
-        data = json.load(f)
-    cutoff = str(date.today() - timedelta(days=2))
-    return {link: d for link, d in data.items() if d >= cutoff}
+    try:
+        with open(SEEN_FILE) as f:
+            data = json.load(f)
+        cutoff = str(date.today() - timedelta(days=2))
+        return {link: d for link, d in data.items() if d >= cutoff}
+    except (json.JSONDecodeError, ValueError) as e:
+        print(f"[main] Warning: {SEEN_FILE} is corrupted ({e}). Starting fresh.")
+        return {}
 
 
 def save_seen(seen: dict):
