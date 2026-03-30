@@ -10,42 +10,42 @@
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:       #0e1117;
-  --surface:  #161b25;
+  --bg: #0e1117;
+  --surface: #161b25;
   --surface2: #1e2535;
-  --border:   #2a3347;
-  --text:     #e8edf5;
-  --muted:    #6b7a99;
-  --gold:     #f0b429;
+  --border: #2a3347;
+  --text: #e8edf5;
+  --muted: #6b7a99;
+  --gold: #f0b429;
   --gold-dim: rgba(240,180,41,0.12);
-  --teal:     #22d3b8;
+  --teal: #22d3b8;
   --teal-dim: rgba(34,211,184,0.1);
-  --red:      #f56565;
-  --green:    #48bb78;
-  --ias:      #3b82f6;
-  --ias-dim:  rgba(59,130,246,0.12);
-  --cin:      #a855f7;
-  --cin-dim:  rgba(168,85,247,0.12);
-  --radius:   10px;
-  --radius-sm:6px;
+  --red: #f56565;
+  --green: #48bb78;
+  --ias: #3b82f6;
+  --ias-dim: rgba(59,130,246,0.12);
+  --cin: #a855f7;
+  --cin-dim: rgba(168,85,247,0.12);
+  --radius: 10px;
+  --radius-sm: 6px;
 }
 body.light {
-  --bg:       #f4f6fa;
-  --surface:  #ffffff;
+  --bg: #f4f6fa;
+  --surface: #ffffff;
   --surface2: #edf0f7;
-  --border:   #d1d9ea;
-  --text:     #1a2035;
-  --muted:    #7a88aa;
-  --gold:     #d4920a;
+  --border: #d1d9ea;
+  --text: #1a2035;
+  --muted: #7a88aa;
+  --gold: #d4920a;
   --gold-dim: rgba(212,146,10,0.1);
-  --teal:     #0e9e88;
+  --teal: #0e9e88;
   --teal-dim: rgba(14,158,136,0.1);
-  --red:      #dc2626;
-  --green:    #16a34a;
-  --ias:      #2563eb;
-  --ias-dim:  rgba(37,99,235,0.1);
-  --cin:      #7c3aed;
-  --cin-dim:  rgba(124,58,237,0.1);
+  --red: #dc2626;
+  --green: #16a34a;
+  --ias: #2563eb;
+  --ias-dim: rgba(37,99,235,0.1);
+  --cin: #7c3aed;
+  --cin-dim: rgba(124,58,237,0.1);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; flex-direction: column; transition: background 0.2s, color 0.2s; }
@@ -152,7 +152,7 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
 .field-box { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; font-size: 0.83rem; color: #9aa5be; }
 .meta-count { font-size: 0.7rem; color: var(--muted); margin-top: 6px; }
 .meta-count.warn { color: var(--red); }
-.meta-count.ok   { color: var(--green); }
+.meta-count.ok { color: var(--green); }
 .btn-copy { padding: 4px 10px; background: transparent; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'Outfit', sans-serif; font-size: 0.65rem; cursor: pointer; color: var(--muted); transition: all 0.15s; }
 .btn-copy:hover { background: var(--surface2); color: var(--text); }
 .btn-copy.copied { background: rgba(72,187,120,0.15); color: var(--green); border-color: rgba(72,187,120,0.3); }
@@ -186,20 +186,78 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
-/* ── Sources tab ── */
-.sources-grid { display: flex; flex-direction: column; gap: 8px; }
-.source-row { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 16px; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; transition: border-color 0.15s; }
-.source-row:hover { border-color: #3a4a66; }
-.source-row-left { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
-.source-row-title { font-size: 0.85rem; font-weight: 500; line-height: 1.35; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.source-row-meta { display: flex; align-items: center; gap: 8px; }
-.source-row-site { font-size: 0.65rem; background: var(--surface2); color: var(--muted); padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
-.source-row-link { font-size: 0.65rem; color: var(--teal); text-decoration: none; direction: ltr; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 320px; opacity: 0.8; }
-.source-row-link:hover { opacity: 1; }
+/* ── Sources tab (old flat list — kept for fallback, hidden) ── */
 .sources-filter { display: flex; gap: 8px; margin-bottom: 16px; align-items: center; }
 .sources-filter input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 7px 12px; color: var(--text); font-family: 'Outfit', sans-serif; font-size: 0.8rem; direction: rtl; }
 .sources-filter input:focus { outline: none; border-color: var(--gold); }
-.sources-count { font-size: 0.72rem; color: var(--muted); white-space: nowrap; }
+.sources-count { font-size: 0.72rem; color: var(--muted); white-space: nowrap; background: var(--surface2); padding: 4px 10px; border-radius: 20px; }
+
+/* ── Site-by-site sources view ── */
+.sites-grid { display: flex; flex-direction: column; gap: 6px; }
+
+.site-block { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; transition: border-color 0.15s; }
+.site-block.has-news { border-color: var(--border); }
+.site-block.has-news:hover { border-color: #3a4a66; }
+
+.site-block-header { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; gap: 12px; }
+.site-block.has-news .site-block-header { background: var(--surface2); border-bottom: 1px solid var(--border); }
+.site-block.no-news .site-block-header { opacity: 0.55; }
+
+.site-block-name {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  direction: ltr;
+  text-align: left;
+  flex: 1;
+}
+.site-block.no-news .site-block-name { color: var(--muted); font-weight: 400; }
+
+.site-news-count {
+  font-size: 0.62rem;
+  background: var(--teal-dim);
+  color: var(--teal);
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.site-no-news-label {
+  font-size: 0.72rem;
+  color: var(--muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-style: italic;
+}
+
+.site-articles-list { padding: 6px 12px 10px; display: flex; flex-direction: column; gap: 2px; }
+
+.site-article-link {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding: 5px 6px;
+  text-decoration: none;
+  border-radius: 4px;
+  transition: background 0.12s;
+  direction: ltr;
+  text-align: left;
+}
+.site-article-link:hover { background: var(--surface2); }
+.site-article-arrow { color: var(--teal); font-size: 0.6rem; flex-shrink: 0; margin-top: 1px; }
+.site-article-title { font-size: 0.81rem; color: var(--text); line-height: 1.45; }
+.site-article-link:hover .site-article-title { color: var(--teal); }
+
+/* ── Manual link tab ── */
+.manual-panel { display: flex; flex-direction: column; gap: 20px; }
+.manual-intro { font-size: 0.83rem; color: var(--muted); padding: 14px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); line-height: 1.6; }
+.manual-input-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.manual-url-input { flex: 1; min-width: 260px; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text); font-family: monospace; font-size: 0.82rem; direction: ltr; transition: border-color 0.2s; }
+.manual-url-input:focus { outline: none; border-color: var(--gold); }
+.manual-url-input::placeholder { color: var(--muted); opacity: 0.6; }
+.manual-status { font-size: 0.8rem; color: var(--muted); min-height: 20px; }
+.manual-status.error { color: var(--red); }
+.manual-status.loading { color: var(--teal); }
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -241,6 +299,7 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
     <div class="tabs">
       <button class="tab-btn active" id="tab-digest" onclick="switchTab('digest')">📰 סיפורים</button>
       <button class="tab-btn" id="tab-sources" onclick="switchTab('sources')">🔗 מקורות מהיום</button>
+      <button class="tab-btn" id="tab-manual" onclick="switchTab('manual')">✍️ כתוב מקישור</button>
     </div>
 
     <div class="tab-panel active" id="panel-digest">
@@ -251,11 +310,27 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
 
     <div class="tab-panel" id="panel-sources">
       <div class="sources-filter">
-        <input type="text" id="sources-search" placeholder="חפש לפי כותרת או אתר..." oninput="filterSources()">
+        <input type="text" id="sources-search" placeholder="חפש לפי שם אתר..." oninput="filterSites()">
         <span class="sources-count" id="sources-count"></span>
       </div>
-      <div class="sources-grid" id="sources-grid">
+      <div class="sites-grid" id="sites-grid">
         <div class="loading"><div class="spinner"></div>טוען מקורות...</div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="panel-manual">
+      <div class="manual-panel">
+        <div class="manual-intro">הדבק קישור לכתבה מכל מקור — Gemini יקרא אותה ויכתוב כתבה בעברית</div>
+        <div class="manual-input-row">
+          <input type="url" id="manual-url" class="manual-url-input" placeholder="https://..." dir="ltr" onkeydown="if(event.key==='Enter') fetchAndWrite()">
+          <div class="site-selector">
+            <button class="site-btn" id="manual-ias" onclick="setManualSite('ias')">IAS</button>
+            <button class="site-btn active-cin" id="manual-cin" onclick="setManualSite('cin')">CruiseIn</button>
+          </div>
+          <button class="btn-write" id="manual-go-btn" onclick="fetchAndWrite()">✍️ כתוב כתבה</button>
+        </div>
+        <div id="manual-status" class="manual-status"></div>
+        <div id="manual-output"></div>
       </div>
     </div>
   </main>
@@ -308,17 +383,56 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
 <script>
 // ── Default endings ───────────────────────────────────────────────────────────
 const DEFAULT_IAS_ENDING = `הצטרפו לקבוצת הוואטסאפ: IAS – חדשות ועדכוני תיירות מהארץ ומהעולם
+
 https://chat.whatsapp.com/H9cw6nMoqtaFb5SiAkBSFB?mode=ems_copy_t
 
 חפשו אותנו גם בטלגרם
+
 https://t.me/IASMagat`;
 
 const DEFAULT_CIN_ENDING = `ברוכים המצטרפים לקבוצת הפייסבוק ״קרוז חלום של הפלגה״ – הייחודית בעולם הקרוזים. למעלה מ-16,000 חברים
+
 הצטרפו לקבוצת הוואטסאפ "קרוז אין-חדשות חמות מהים"
+
 חפשו אותנו גם בטלגרם`;
 
+// ── Master site list (mirrors config.yaml order exactly) ─────────────────────
+const ALL_SITES = [
+  "Royal Caribbean Blog",
+  "Travel and Tour World (RSS)",
+  "Travel and Tour World (HTML)",
+  "NCLH Press Releases",
+  "Cruise Fever",
+  "Carnival Corp",
+  "Carnival News",
+  "The Points Guy - Cruise",
+  "MSC Press Area (INT)",
+  "MSC Press Area (US)",
+  "Holland America",
+  "Explora Journeys",
+  "Oceania Cruises",
+  "USA Today Cruises",
+  "Disney Cruise Line",
+  "Seabourn",
+  "Princess Cruises",
+  "Royal Caribbean Press Center",
+  "Silversea Press Center",
+  "Crystal Cruises",
+  "CLIA (cruising.org) News",
+  "P&O Cruises Blog",
+  "Windstar Cruises",
+  "Cruise Industry News",
+  "NCL Newsroom",
+  "Royal Caribbean Group",
+  "RSSC (Regent)",
+  "Celebrity Cruises Press Center",
+  "Breaking Travel News - Cruise",
+  "TravelPulse - Cruise",
+  "Travel Weekly - Cruise"
+];
+
 // ── Storage ───────────────────────────────────────────────────────────────────
-function loadKey()       { return localStorage.getItem('gemini_api_key') || ''; }
+function loadKey() { return localStorage.getItem('gemini_api_key') || ''; }
 function loadIasEnding() { return localStorage.getItem('ias_ending') || DEFAULT_IAS_ENDING; }
 function loadCinEnding() { return localStorage.getItem('cin_ending') || DEFAULT_CIN_ENDING; }
 
@@ -354,6 +468,17 @@ function saveSettings() {
   localStorage.setItem('cin_ending', document.getElementById('s-cin-ending').value);
   closeSettings();
   alert('ההגדרות נשמרו ✓');
+}
+
+// ── Theme ─────────────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light');
+  document.getElementById('theme-toggle').textContent = isLight ? '🌙' : '☀️';
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+function initTheme() {
+  const saved = localStorage.getItem('theme');
+  if (saved === 'light') { document.body.classList.add('light'); document.getElementById('theme-toggle').textContent = '🌙'; }
 }
 
 // ── Date helpers ──────────────────────────────────────────────────────────────
@@ -423,7 +548,7 @@ function parseStories(summaryText, rawItems) {
     }
     const sources = sourceLines.filter(l => l.includes('http')).map(l => {
       const urlMatch = l.match(/https?:\/\/[^\s)]+/);
-      const label = l.replace(/https?:\/\/[^\s)]+/, '').replace(/^[-–—\s*]+/, '').trim();
+      const label = l.replace(/https?:\/\/[^\s)]+/, '').replace(/^[-–—\s\*]+/, '').trim();
       return { label: label || 'קישור', url: urlMatch ? urlMatch[0] : '#' };
     });
     const related = rawItems.filter(item => sources.some(s => s.url === item.link));
@@ -432,485 +557,333 @@ function parseStories(summaryText, rawItems) {
   });
 }
 
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  document.getElementById('panel-' + name).classList.add('active');
+}
+
 // ── Render ────────────────────────────────────────────────────────────────────
+let currentItems = [];
 let currentStories = [];
+
 async function loadAndRender(iso) {
   const container = document.getElementById('stories-container');
   container.innerHTML = `<div class="loading"><div class="spinner"></div>טוען...</div>`;
+  const grid = document.getElementById('sites-grid');
+  grid.innerHTML = `<div class="loading"><div class="spinner"></div>טוען מקורות...</div>`;
+
   const digest = await fetchDigest(iso);
   const dateEl = document.getElementById('page-date');
   const countEl = document.getElementById('page-count');
+
   if (!digest) {
     dateEl.innerHTML = `${hebrewDayLabel(0)}<span> — אין נתונים</span>`;
     countEl.textContent = '';
     container.innerHTML = `<div class="empty"><h3>אין דיגסט לתאריך זה</h3><p>הדיגסט ייווצר אוטומטית בשעה 03:00.</p></div>`;
+    grid.innerHTML = `<div class="empty"><h3>אין נתונים</h3></div>`;
     return;
   }
+
   const parts = fullDate(digest.date).split(' ');
   dateEl.innerHTML = `${parts[0]} <span>${parts.slice(1).join(' ')}</span>`;
-  currentStories = parseStories(digest.summary, digest.items || []);
-  // Sort stories so those sourced from higher-priority sites appear first
+
+  currentItems = digest.items || [];
+  currentStories = parseStories(digest.summary, currentItems);
+
+  // Sort stories by source priority (known sites first)
+  const PRIORITY_SITES = ['Royal Caribbean Blog', 'Cruise Fever', 'Cruise Industry News', 'Royal Caribbean Press Center', 'Royal Caribbean Group'];
   currentStories.sort((a, b) => {
-    const pa = Math.min(...(a.related.map(priorityOf).concat([SOURCE_PRIORITY.length])));
-    const pb = Math.min(...(b.related.map(priorityOf).concat([SOURCE_PRIORITY.length])));
-    return pa - pb;
+    const aP = a.related.some(r => PRIORITY_SITES.includes(r.source)) ? 0 : 1;
+    const bP = b.related.some(r => PRIORITY_SITES.includes(r.source)) ? 0 : 1;
+    return aP - bP;
   });
+
   countEl.textContent = `${currentStories.length} סיפורים`;
+  renderStories(currentStories);
+  renderSites(currentItems);
+}
 
-  // Populate sources tab with all raw items from digest, sorted by priority
-  renderSources(sortByPriority(digest.items || []));
-  if (!currentStories.length) { container.innerHTML = `<div class="empty"><h3>לא נמצאו חדשות</h3><p>נסה תאריך אחר.</p></div>`; return; }
-
-  // Per-card site state
-  const siteState = {};
-  currentStories.forEach((_, i) => { siteState[i] = 'ias'; });
-
-  function renderCards() {
-    container.innerHTML = currentStories.map((s, i) => `
-      <div class="story-card" style="animation-delay:${i * 40}ms">
-        <div>
-          <div class="story-num">${i + 1}</div>
-          <div class="story-title" onclick="openModal(${i})">${s.title}</div>
-          <div class="story-summary">${s.summary}</div>
-          <div class="story-sources">
-            ${s.sources.map(src => `<a href="${src.url}" target="_blank" class="source-chip">${src.label.substring(0,45)}</a>`).join('')}
-          </div>
+// ── Render stories ────────────────────────────────────────────────────────────
+function renderStories(stories) {
+  const container = document.getElementById('stories-container');
+  if (!stories.length) {
+    container.innerHTML = `<div class="empty"><h3>אין חדשות להיום</h3><p>הדיגסט ייווצר אוטומטית בשעה 03:00.</p></div>`;
+    return;
+  }
+  container.innerHTML = `<div class="stories">${stories.map((s, i) => `
+    <div class="story-card" style="animation-delay:${i * 0.04}s">
+      <div>
+        <div class="story-num">${i + 1}</div>
+        <div class="story-title" onclick="openWriteModal(${i})">${esc(s.title)}</div>
+        <div class="story-summary">${esc(s.summary)}</div>
+        <div class="story-sources">
+          ${s.sources.map(src => `<a class="source-chip" href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.label || src.url)}</a>`).join('')}
         </div>
-        <div class="write-group">
-          <div class="site-selector" id="selector-${i}">
-            <button class="site-btn active-ias" id="sBtn-${i}-ias" onclick="setSite(${i},'ias')">IAS</button>
-            <button class="site-btn" id="sBtn-${i}-cin" onclick="setSite(${i},'cin')">CruiseIn</button>
-          </div>
-          <button class="btn-write" onclick="openModal(${i})">✍️ כתוב כתבה</button>
+      </div>
+      <div class="write-group">
+        <div class="site-selector">
+          <button class="site-btn" id="site-ias-${i}" onclick="setSite(${i},'ias')">IAS</button>
+          <button class="site-btn active-cin" id="site-cin-${i}" onclick="setSite(${i},'cin')">CruiseIn</button>
         </div>
-      </div>`).join('');
+        <button class="btn-write" onclick="openWriteModal(${i})">✍️ כתוב כתבה</button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+// ── Site selector per card ────────────────────────────────────────────────────
+const cardSites = {};
+function setSite(idx, site) {
+  cardSites[idx] = site;
+  const ias = document.getElementById(`site-ias-${idx}`);
+  const cin = document.getElementById(`site-cin-${idx}`);
+  if (!ias || !cin) return;
+  ias.className = 'site-btn' + (site === 'ias' ? ' active-ias' : '');
+  cin.className = 'site-btn' + (site === 'cin' ? ' active-cin' : '');
+}
+function getCardSite(idx) { return cardSites[idx] || 'cin'; }
+
+// ── Render sites (NEW: site-by-site sources tab) ──────────────────────────────
+function renderSites(items) {
+  const grid = document.getElementById('sites-grid');
+  const countEl = document.getElementById('sources-count');
+
+  // Group items by source
+  const bySource = {};
+  for (const item of items) {
+    const src = item.source || 'אחר';
+    if (!bySource[src]) bySource[src] = [];
+    bySource[src].push(item);
   }
 
-  window.setSite = function(idx, site) {
-    siteState[idx] = site;
-    document.getElementById(`sBtn-${idx}-ias`).className = 'site-btn' + (site === 'ias' ? ' active-ias' : '');
-    document.getElementById(`sBtn-${idx}-cin`).className = 'site-btn' + (site === 'cin' ? ' active-cin' : '');
-  };
+  const activeSiteCount = ALL_SITES.filter(s => bySource[s]).length;
+  const unknownSources = Object.keys(bySource).filter(s => !ALL_SITES.includes(s));
+  const totalActive = activeSiteCount + unknownSources.length;
 
-  window.openModal = async function(i) {
-    const story = currentStories[i];
-    const site = siteState[i] || 'ias';
-    const apiKey = loadKey();
-    if (!apiKey) { alert('נא להזין מפתח Gemini API בשורת הכלים למעלה.'); return; }
+  countEl.textContent = `${totalActive} מתוך ${ALL_SITES.length} אתרים דיווחו היום`;
 
-    const tag = document.getElementById('modal-site-tag');
-    tag.textContent = site === 'ias' ? '📰 IAS' : '🚢 CruiseIn';
-    tag.className = 'modal-site-tag ' + site;
-    document.getElementById('modal-title').textContent = story.title;
-    document.getElementById('modal-body').innerHTML = `
-      <div class="modal-generating">
-        <div class="spinner"></div>
-        <p style="margin-bottom:6px">Gemini כותב את הכתבה...</p>
-        <p style="font-size:0.75rem;color:var(--muted)">כ-15 שניות</p>
-      </div>`;
-    document.getElementById('modal-overlay').classList.add('open');
+  let html = '';
+  // Render all known sites in config order
+  for (const siteName of ALL_SITES) {
+    const articles = bySource[siteName];
+    const hasNews = !!articles;
+    html += `<div class="site-block ${hasNews ? 'has-news' : 'no-news'}" data-site="${esc(siteName)}">
+      <div class="site-block-header">
+        <span class="site-block-name">${esc(siteName)}</span>
+        ${hasNews
+          ? `<span class="site-news-count">${articles.length} כתבה${articles.length > 1 ? 'ות' : ''}</span>`
+          : `<span class="site-no-news-label">אין חדשות מהיום</span>`
+        }
+      </div>
+      ${hasNews ? `<div class="site-articles-list">
+        ${articles.map(a => `
+          <a class="site-article-link" href="${esc(a.link)}" target="_blank" rel="noopener">
+            <span class="site-article-arrow">↗</span>
+            <span class="site-article-title">${esc(a.title)}</span>
+          </a>`).join('')}
+      </div>` : ''}
+    </div>`;
+  }
 
-    try {
-      const ending = site === 'ias' ? loadIasEnding() : loadCinEnding();
-      const result = await generateArticle(story, apiKey, site, ending);
-      renderArticle(result, story, ending);
-    } catch (e) {
-      document.getElementById('modal-body').innerHTML = `
-        <div class="modal-generating">
-          <p style="color:var(--red);margin-bottom:8px">❌ שגיאה: ${e.message}</p>
-          <p style="font-size:0.75rem;color:var(--muted)">בדוק שהמפתח תקין ונסה שוב.</p>
-        </div>`;
-    }
-  };
+  // Any sources NOT in the known list (edge case)
+  for (const siteName of unknownSources) {
+    const articles = bySource[siteName];
+    html += `<div class="site-block has-news" data-site="${esc(siteName)}">
+      <div class="site-block-header">
+        <span class="site-block-name">${esc(siteName)}</span>
+        <span class="site-news-count">${articles.length} כתבה${articles.length > 1 ? 'ות' : ''}</span>
+      </div>
+      <div class="site-articles-list">
+        ${articles.map(a => `
+          <a class="site-article-link" href="${esc(a.link)}" target="_blank" rel="noopener">
+            <span class="site-article-arrow">↗</span>
+            <span class="site-article-title">${esc(a.title)}</span>
+          </a>`).join('')}
+      </div>
+    </div>`;
+  }
 
-  renderCards();
+  grid.innerHTML = html;
 }
 
-// ── Gemini article generation ─────────────────────────────────────────────────
-
-async function generateArticle(story, apiKey, site, ending) {
-  const context = story.related.map(item =>
-    `TITLE: ${item.title}\nSNIPPET: ${item.snippet || ''}\nURL: ${item.link}`
-  ).join('\n\n');
-
-  const siteContext = site === 'ias'
-    ? `האתר הוא IAS – אתר חדשות תיירות ישראלי מקצועי. הטון: עיתונאי, עובדתי, נגיש לסוכני נסיעות ולציבור הרחב.`
-    : `האתר הוא CruiseIn – אתר חדשות קרוזים ישראלי. הטון: נלהב מהתחום, עיתונאי, עם ידע עמוק בעולם השייט.`;
-
-  const prompt = `אתה עוזי בכר, עורך ראשי של אתר חדשות קרוזים. כותב עברית טבעית, ישירה, ועיתונאית. ${siteContext}
-
-## עקרונות הכתיבה שלך
-
-**מבנה:**
-- כותרת: דרמטית + נקודתיים + עובדה ספציפית (דוגמה: "היסטוריה בלב ים: ויקינג משיקה את הספינה הראשונה בעולם המונעת במימן")
-- תת-כותרת (deck): משפט אחד שמסכם את כל הסיפור — ספציפי, לא כללי
-- פתיחה: מתחיל בעובדה מעניינת, הקשר, או נתון מספרי. לא "חברת X הודיעה היום"
-- שמות חברות: **עברית (English)** בהזכרה ראשונה
-- כותרות H2: קצרות, **מודגשות**
-- ציטוטים: שם מלא ותפקיד של הדובר
-- רשימות: נקודות לריבוי פריטים (יעדים, תכונות, מחירים)
-- סיום: עובדה קדימה-מביטה ספציפית. לא "העתיד מבטיח"
-
-**נשמה בכתיבה:**
-- משפטים קצרים ומשפטים ארוכים — מגוון קצב
-- תגובה אנושית לעובדות ("זה לא מעט", "שנה טובה לחברה", "שווה לשים לב")
-- ספציפי תמיד: מספרים, תאריכים, שמות אוניות
-- אם יש מחיר — ציין אותו. אם לא — אמור שהמחיר לא פורסם
-
-**מה לא לעשות (חוקי אנטי-AI):**
-- אסור: "אבן דרך", "מהלך זה", "צעד משמעותי", "בנוף המשתנה"
-- אסור: "מחויבות ל", "פורץ דרך", "ביסודו של דבר", "בסופו של דבר"
-- אסור: צמדי "-ing" בסוף משפטים (מדגיש, מציג, מסמל)
-- אסור: שלשות מקבילות ("X, Y ו-Z" כנוסחה אוטומטית)
-- אסור: מסקנות עמומות ("עתיד מבטיח", "הסכם כולל")
-- אסור: ייחוסים מעורפלים ("מומחים אמרו", "מקורות דיווחו")
-
----
-
-## הסיפור
-
-${story.title}
-${story.summary}
-
-${context ? `מקורות:\n${context}` : ''}
-
----
-
-## המשימה
-
-צור JSON בלבד — ללא markdown, ללא קוד block, רק JSON גולמי:
-
-{
-  "titles": [
-    "כותרת ראשונה: ספציפית ו-SEO",
-    "כותרת שנייה: זווית אחרת על אותו סיפור",
-    "כותרת שלישית: יצירתית, מעוררת סקרנות"
-  ],
-  "deck": "תת-כותרת אחת ספציפית שמסכמת את הסיפור — כמו בעיתון",
-  "article": "הכתבה המלאה כאן — כולל H2, פסקאות, ציטוטים ורשימות. לפחות 450 מילים.",
-  "tags": "תג1, תג2, תג3, תג4, תג5, תג6",
-  "meta": "תיאור מטא SEO — עד 155 תווים בדיוק, בעברית"
-}
-
-חוק ברזל: אל תוסיף שום טקסט מחוץ ל-JSON.`;
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
-  const resp = await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0.75, maxOutputTokens: 3000 }
-    })
+// ── Filter sites by search ────────────────────────────────────────────────────
+function filterSites() {
+  const q = document.getElementById('sources-search').value.trim().toLowerCase();
+  document.querySelectorAll('#sites-grid .site-block').forEach(block => {
+    if (!q) { block.style.display = ''; return; }
+    const siteName = (block.dataset.site || '').toLowerCase();
+    const titles = block.innerText.toLowerCase();
+    block.style.display = (siteName.includes(q) || titles.includes(q)) ? '' : 'none';
   });
+}
 
-  if (!resp.ok) { const err = await resp.json(); throw new Error(err.error?.message || `HTTP ${resp.status}`); }
-  const data = await resp.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+// ── Modal ─────────────────────────────────────────────────────────────────────
+let activeStoryIdx = null;
+function openWriteModal(idx) {
+  activeStoryIdx = idx;
+  const story = currentStories[idx];
+  const site = getCardSite(idx);
+  document.getElementById('modal-title').textContent = story.title;
+  const tag = document.getElementById('modal-site-tag');
+  tag.textContent = site === 'ias' ? '📘 IAS' : '💜 CruiseIn';
+  tag.className = 'modal-site-tag ' + site;
+  document.getElementById('modal-overlay').classList.add('open');
+  generateArticle(story, site);
+}
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+  activeStoryIdx = null;
+}
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+// ── Article generation ────────────────────────────────────────────────────────
+async function generateArticle(story, site) {
+  const body = document.getElementById('modal-body');
+  body.innerHTML = `<div class="modal-generating"><div class="spinner"></div><p>כותב כתבה בעברית...</p></div>`;
+
+  const apiKey = loadKey();
+  if (!apiKey) {
+    body.innerHTML = `<div class="empty"><h3>אין מפתח API</h3><p>הכנס מפתח Gemini בהגדרות.</p></div>`;
+    return;
+  }
+
+  const ending = site === 'ias' ? loadIasEnding() : loadCinEnding();
+  const siteName = site === 'ias' ? 'IAS' : 'CruiseIn';
+  const sourceLinks = story.sources.map(s => s.url).join('\n');
+
+  const prompt = `אתה עיתונאי קרוזים מנוסה שכותב לאתר ${siteName} בעברית.
+
+כתוב כתבה מקצועית בעברית על הסיפור הבא:
+
+כותרת: ${story.title}
+תקציר: ${story.summary}
+קישורי מקורות:
+${sourceLinks}
+
+הנחיות כתיבה:
+- כתוב בעברית טבעית ושוטפת, כמו עיתונאי אמיתי
+- אל תכתוב כמו AI — אסור ביטויים כמו "חשוב לציין", "יש לציין", "בסופו של דבר", "בעולם המתפתח"
+- פתח בפסקה מושכת שמציגה את הסיפור
+- השתמש בכותרות H2 לחלוקה טבעית של הכתבה
+- אורך: לפחות 450 מילים, עד 600
+- כתוב בגוף שלישי, בסגנון עיתונאי
+- אל תוסיף סיכום ריק בסוף
+
+פורמט התשובה — אל תסטה ממנו:
+TITLES:
+1. [כותרת ראשונה]
+2. [כותרת שנייה]  
+3. [כותרת שלישית]
+
+DECK:
+[משפט תקציר אחד — עד 25 מילים]
+
+ARTICLE:
+[גוף הכתבה]
+
+TAGS:
+[תגיות מופרדות בפסיקים]
+
+META:
+[תיאור מטא עד 155 תווים]`;
 
   try {
-    const codeBlock = text.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (codeBlock) return JSON.parse(codeBlock[1].trim());
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) return JSON.parse(jsonMatch[0]);
-    return JSON.parse(text.trim());
-  } catch {
-    console.error('Raw Gemini response:', text);
-    throw new Error('Gemini החזיר תגובה לא תקינה. פתח Console (F12) לפרטים.');
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 2048 } })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error?.message || 'API error');
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    renderArticle(body, text, ending, story);
+  } catch (err) {
+    body.innerHTML = `<div class="empty"><h3>שגיאה</h3><p>${esc(err.message)}</p></div>`;
   }
 }
 
-// ── Render article ────────────────────────────────────────────────────────────
-// All copy text is stored in a Map keyed by button id — no inline onclick strings,
-// which avoids GitHub Pages' strict Content Security Policy.
-const copyStore = new Map();
-let copyIdCounter = 0;
+function renderArticle(body, text, ending, story) {
+  const get = (key, nextKey) => {
+    const re = new RegExp(`${key}:\\s*([\\s\\S]*?)(?=${nextKey}:|$)`, 'i');
+    const m = text.match(re);
+    return m ? m[1].trim() : '';
+  };
+  const titlesRaw = get('TITLES', 'DECK');
+  const deck = get('DECK', 'ARTICLE');
+  const article = get('ARTICLE', 'TAGS');
+  const tags = get('TAGS', 'META');
+  const meta = get('META', '~~~');
 
-function makeCopyBtn(text, label = 'העתק') {
-  const id = 'cp-' + (++copyIdCounter);
-  copyStore.set(id, text);
-  return `<button class="btn-copy" data-copy-id="${id}">${label}</button>`;
+  const titles = titlesRaw.split('\n').map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
+  const fullArticle = article + (ending ? '\n\n' + ending : '');
+  const metaLen = meta.length;
+
+  body.innerHTML = `
+    <div class="modal-sources">
+      <div class="modal-sources-label">מקורות</div>
+      ${story.sources.map(s => `<a class="modal-source-link" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label || s.url)}</a>`).join('')}
+    </div>
+
+    <div class="art-section">
+      <div class="art-label">כותרות <button class="btn-copy" onclick="copyEl('titles-block', this)">העתק כותרת 1</button></div>
+      <div class="titles-list" id="titles-block">
+        ${titles.map((t, i) => `
+          <div class="title-opt">
+            <span>${esc(t)}</span>
+            <button class="btn-copy" onclick="copyText(${JSON.stringify(t)}, this)">העתק</button>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="art-section">
+      <div class="art-label">ליד (Deck) <button class="btn-copy" onclick="copyText(${JSON.stringify(deck)}, this)">העתק</button></div>
+      <div class="field-box" id="deck-box">${esc(deck)}</div>
+    </div>
+
+    <div class="art-section">
+      <div class="art-label">כתבה מלאה <button class="btn-copy" onclick="copyText(${JSON.stringify(fullArticle)}, this)">העתק</button></div>
+      <div class="article-box">${esc(fullArticle)}</div>
+    </div>
+
+    <div class="art-section">
+      <div class="art-label">תגיות <button class="btn-copy" onclick="copyText(${JSON.stringify(tags)}, this)">העתק</button></div>
+      <div class="field-box">${esc(tags)}</div>
+    </div>
+
+    <div class="art-section">
+      <div class="art-label">Meta Description <button class="btn-copy" onclick="copyText(${JSON.stringify(meta)}, this)">העתק</button></div>
+      <div class="field-box">${esc(meta)}</div>
+      <div class="meta-count ${metaLen > 155 ? 'warn' : metaLen >= 120 ? 'ok' : ''}">${metaLen} / 155 תווים</div>
+    </div>`;
 }
 
-function renderArticle(result, story, ending) {
-  const fullArticle = (result.article || '') + '\n\n' + ending;
-  const metaLen = (result.meta || '').length;
-
-  const body = document.getElementById('modal-body');
-
-  // Sources
-  const sourcesDiv = document.createElement('div');
-  if (story.sources.length) {
-    sourcesDiv.className = 'modal-sources';
-    sourcesDiv.innerHTML = `<div class="modal-sources-label">מקורות מקוריים לבדיקת עובדות</div>` +
-      story.sources.map(s => `<a href="${s.url}" target="_blank" class="modal-source-link">${s.url}</a>`).join('');
-  }
-
-  // Titles
-  const titlesSection = document.createElement('div');
-  titlesSection.className = 'art-section';
-  titlesSection.innerHTML = `<div class="art-label">3 אפשרויות כותרת</div>`;
-  const titlesList = document.createElement('div');
-  titlesList.className = 'titles-list';
-  (result.titles || []).forEach(t => {
-    const row = document.createElement('div');
-    row.className = 'title-opt';
-    const span = document.createElement('span');
-    span.textContent = t;
-    row.appendChild(span);
-    const btn = document.createElement('button');
-    btn.className = 'btn-copy';
-    btn.textContent = 'העתק';
-    btn.addEventListener('click', () => doCopy(btn, t));
-    row.appendChild(btn);
-    titlesList.appendChild(row);
-  });
-  titlesSection.appendChild(titlesList);
-
-  // Deck
-  const deckSection = document.createElement('div');
-  if (result.deck) {
-    deckSection.className = 'art-section';
-    const label = document.createElement('div');
-    label.className = 'art-label';
-    label.textContent = 'תת-כותרת (Deck)';
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'btn-copy';
-    copyBtn.textContent = 'העתק';
-    copyBtn.addEventListener('click', () => doCopy(copyBtn, result.deck));
-    label.appendChild(copyBtn);
-    const box = document.createElement('div');
-    box.className = 'field-box';
-    box.textContent = result.deck;
-    deckSection.appendChild(label);
-    deckSection.appendChild(box);
-  }
-
-  // Full article
-  const articleSection = document.createElement('div');
-  articleSection.className = 'art-section';
-  const articleLabel = document.createElement('div');
-  articleLabel.className = 'art-label';
-  articleLabel.textContent = 'כתבה מלאה (כולל סיומת)';
-  const articleCopyBtn = document.createElement('button');
-  articleCopyBtn.className = 'btn-copy';
-  articleCopyBtn.textContent = 'העתק הכל';
-  articleCopyBtn.addEventListener('click', () => doCopy(articleCopyBtn, fullArticle));
-  articleLabel.appendChild(articleCopyBtn);
-  const articleBox = document.createElement('div');
-  articleBox.className = 'article-box';
-  articleBox.textContent = fullArticle;
-  articleSection.appendChild(articleLabel);
-  articleSection.appendChild(articleBox);
-
-  // Tags
-  const tagsSection = document.createElement('div');
-  tagsSection.className = 'art-section';
-  const tagsLabel = document.createElement('div');
-  tagsLabel.className = 'art-label';
-  tagsLabel.textContent = 'תגיות';
-  const tagsCopyBtn = document.createElement('button');
-  tagsCopyBtn.className = 'btn-copy';
-  tagsCopyBtn.textContent = 'העתק';
-  tagsCopyBtn.addEventListener('click', () => doCopy(tagsCopyBtn, result.tags || ''));
-  tagsLabel.appendChild(tagsCopyBtn);
-  const tagsBox = document.createElement('div');
-  tagsBox.className = 'field-box';
-  tagsBox.textContent = result.tags || '';
-  tagsSection.appendChild(tagsLabel);
-  tagsSection.appendChild(tagsBox);
-
-  // Meta
-  const metaSection = document.createElement('div');
-  metaSection.className = 'art-section';
-  const metaLabel = document.createElement('div');
-  metaLabel.className = 'art-label';
-  metaLabel.textContent = 'Meta Description';
-  const metaCopyBtn = document.createElement('button');
-  metaCopyBtn.className = 'btn-copy';
-  metaCopyBtn.textContent = 'העתק';
-  metaCopyBtn.addEventListener('click', () => doCopy(metaCopyBtn, result.meta || ''));
-  metaLabel.appendChild(metaCopyBtn);
-  const metaBox = document.createElement('div');
-  metaBox.className = 'field-box';
-  metaBox.textContent = result.meta || '';
-  const metaCount = document.createElement('div');
-  metaCount.className = 'meta-count ' + (metaLen > 155 ? 'warn' : 'ok');
-  metaCount.textContent = `${metaLen} / 155 תווים ${metaLen > 155 ? '⚠️' : '✓'}`;
-  metaBox.appendChild(metaCount);
-  metaSection.appendChild(metaLabel);
-  metaSection.appendChild(metaBox);
-
-  // Assemble
-  body.innerHTML = '';
-  if (story.sources.length) body.appendChild(sourcesDiv);
-  body.appendChild(titlesSection);
-  if (result.deck) body.appendChild(deckSection);
-  body.appendChild(articleSection);
-  body.appendChild(tagsSection);
-  body.appendChild(metaSection);
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function esc(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-// ── Utils ─────────────────────────────────────────────────────────────────────
-function doCopy(btn, text) {
+function copyText(text, btn) {
   navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = '✓ הועתק'; btn.classList.add('copied');
+    btn.textContent = '✓ הועתק';
+    btn.classList.add('copied');
     setTimeout(() => { btn.textContent = 'העתק'; btn.classList.remove('copied'); }, 2000);
   });
 }
-function closeModal() { document.getElementById('modal-overlay').classList.remove('open'); }
-function handleOverlayClick(e) { if (e.target === document.getElementById('modal-overlay')) closeModal(); }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeSettings(); } });
-
-// ── Theme ─────────────────────────────────────────────────────────────────────
-function toggleTheme() {
-  const light = document.body.classList.toggle('light');
-  localStorage.setItem('theme', light ? 'light' : 'dark');
-  document.getElementById('theme-toggle').textContent = light ? '🌙' : '☀️';
-}
-function initTheme() {
-  if (localStorage.getItem('theme') === 'light') {
-    document.body.classList.add('light');
-    document.getElementById('theme-toggle').textContent = '🌙';
-  }
-}
-
-// ── Source priority ───────────────────────────────────────────────────────────
-const SOURCE_PRIORITY = [
-  "royalcaribbeanpresscenter.com",
-  "celebritycruisespresscenter.com",
-  "breakingtravelnews.com",
-  "thepointsguy.com",
-  "mscpressarea.com",
-  "cruiseindustrynews.com",
-  "cruisefever.net",
-  "travelandtourworld.com",
-  "nclhltd.com",
-  "carnivalcorp.com",
-  "carnival-news.com",
-  "royalcaribbeangroup.com",
-  "royalcaribbeanblog.com",
-  "ncl.com",
-  "travelpulse.com",
-  "hollandamerica.com",
-  "travelweekly.com",
-  "usatoday.com",
-  "oceaniacruises.com",
-  "disneyexperiences.com",
-  "cunard.com",
-  "pocruises.com",
-  "rssc.com",
-  "seabourn.com",
-  "crystalcruises.com",
-  "windstarcruises.com",
-  "princess.com",
-];
-
-function priorityOf(item) {
-  try {
-    const host = new URL(item.link).hostname.replace(/^www\./, '');
-    const idx = SOURCE_PRIORITY.findIndex(s => host.includes(s) || s.includes(host));
-    return idx === -1 ? SOURCE_PRIORITY.length : idx;
-  } catch { return SOURCE_PRIORITY.length; }
-}
-
-function sortByPriority(items) {
-  return [...items].sort((a, b) => priorityOf(a) - priorityOf(b));
-}
-
-// ── Tabs ──────────────────────────────────────────────────────────────────────
-function switchTab(tab) {
-  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-  document.getElementById('tab-' + tab).classList.add('active');
-  document.getElementById('panel-' + tab).classList.add('active');
-}
-
-// ── Sources tab ───────────────────────────────────────────────────────────────
-let allSourceItems = [];
-
-function renderSources(items) {
-  allSourceItems = items || [];
-  updateSourcesGrid(allSourceItems);
-}
-
-function filterSources() {
-  const q = document.getElementById('sources-search').value.trim().toLowerCase();
-  if (!q) { updateSourcesGrid(allSourceItems); return; }
-  const filtered = allSourceItems.filter(item =>
-    (item.title || '').toLowerCase().includes(q) ||
-    (item.source || '').toLowerCase().includes(q) ||
-    (item.link || '').toLowerCase().includes(q)
-  );
-  updateSourcesGrid(filtered);
-}
-
-function updateSourcesGrid(items) {
-  const grid = document.getElementById('sources-grid');
-  const countEl = document.getElementById('sources-count');
-  countEl.textContent = `${items.length} קישורים`;
-
-  if (!items.length) {
-    grid.innerHTML = `<div class="empty"><h3>אין תוצאות</h3></div>`;
-    return;
-  }
-
-  grid.innerHTML = '';
-  items.forEach(item => {
-    const row = document.createElement('div');
-    row.className = 'source-row';
-
-    const left = document.createElement('div');
-    left.className = 'source-row-left';
-
-    const title = document.createElement('div');
-    title.className = 'source-row-title';
-    title.textContent = item.title || item.link;
-    title.title = item.title || '';
-
-    const meta = document.createElement('div');
-    meta.className = 'source-row-meta';
-
-    if (item.source) {
-      const site = document.createElement('span');
-      site.className = 'source-row-site';
-      site.textContent = item.source;
-      meta.appendChild(site);
-    }
-
-    const link = document.createElement('a');
-    link.className = 'source-row-link';
-    link.href = item.link;
-    link.target = '_blank';
-    link.rel = 'noopener';
-    link.textContent = item.link;
-    meta.appendChild(link);
-
-    left.appendChild(title);
-    left.appendChild(meta);
-
-    const openBtn = document.createElement('a');
-    openBtn.href = item.link;
-    openBtn.target = '_blank';
-    openBtn.rel = 'noopener';
-    openBtn.className = 'btn-sm';
-    openBtn.style.cssText = 'padding:5px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--muted);font-size:0.7rem;text-decoration:none;white-space:nowrap;transition:all 0.15s;';
-    openBtn.textContent = '↗ פתח';
-
-    row.appendChild(left);
-    row.appendChild(openBtn);
-    grid.appendChild(row);
-  });
+function copyEl(id, btn) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const first = el.querySelector('.title-opt span');
+  if (first) copyText(first.textContent, btn);
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
-async function init() {
-  initKey();
-  initTheme();
-  buildDateNav();
-  loadAndRender(activeDate);
-}
-init();
+initKey();
+initTheme();
+buildDateNav();
+loadAndRender(activeDate);
 </script>
 </body>
 </html>
