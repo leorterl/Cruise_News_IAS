@@ -52,20 +52,24 @@ class Article:
 # ── Public interface ───────────────────────────────────────────────────────────
 
 def collect(seen_links: set) -> list[dict]:
-    """
-    Crawl all sites in config.yaml, skip already-seen links,
-    and return a list of {title, link, snippet} dicts for main.py.
-    """
     config = _load_config()
     articles = _scrape_all(config, seen_links)
-
-   results.append({
-    "title": a.title,
-    "link": a.url,
-    "snippet": a.content[:300] if a.content else "",
-    "source": a.source,   # ← add this
-})
-
+    results = []
+    JUNK_TITLES = {
+        "learn more", "destinations", "cruise life", "food and drink",
+        "new to cruising", "cruiseworld", "blog", "news", "home",
+        "press releases", "media", "contact", "about",
+    }
+    for a in articles:
+        if a.title.strip().lower() in JUNK_TITLES:
+            logger.debug(f"[crawler] Skipping junk title: {a.title!r}")
+            continue
+        results.append({
+            "title": a.title,
+            "link": a.url,
+            "snippet": a.content[:300] if a.content else "",
+            "source": a.source,
+        })
     logger.info(f"[crawler] Collected {len(results)} new items.")
     return results
 
