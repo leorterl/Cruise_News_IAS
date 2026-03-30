@@ -278,10 +278,9 @@ def _scrape_stealth(site, timeout, cutoff, seen_links) -> list[Article]:
                         logger.debug(f"Skipping old article ({pub_date.date()}): {url}")
                         continue
                 else:
-                    current_year = str(datetime.now(timezone.utc).year)
-                    if current_year not in url:
-                        logger.debug(f"Skipping undatable article (no year in URL): {url}")
-                        continue
+                    # Lenient tweak: If no date found, allow it but log a warning.
+                    # Deduplication (seen_links.json) will prevent it from appearing twice.
+                    logger.debug(f"Allowing undatable article (will be deduplicated): {url}")
             content  = _extract_content(art_soup, site.get("content_selector"))
         except Exception as e:
             logger.warning(f"[{site['name']}] failed to fetch {url}: {e}")
@@ -335,8 +334,8 @@ def _scrape_playwright_batch(sites, cutoff, seen_links) -> list[Article]:
             max_per_site = site.get("max_articles", 5)
 
             try:
-                page.goto(site["url"], timeout=30000, wait_until="domcontentloaded")
-                page.wait_for_timeout(3000)
+                page.goto(site["url"], timeout=45000, wait_until="domcontentloaded")
+                page.wait_for_timeout(5000)
 
                 listing_selector = site.get("listing_selector", "article a")
                 links = page.eval_on_selector_all(
@@ -373,8 +372,12 @@ def _scrape_playwright_batch(sites, cutoff, seen_links) -> list[Article]:
                         continue
 
                     try:
-                        page.goto(href, timeout=20000, wait_until="domcontentloaded")
-                        page.wait_for_timeout(1500)
+                        page.goto(href, timeout=30000, wait_until="domcontentloaded")
+                        # Special wait for TravelPulse or sites with modals
+                        if "travelpulse.com" in href:
+                            page.wait_for_timeout(4000)
+                        else:
+                            page.wait_for_timeout(2000)
 
                         page_html = page.content()
                         art_soup = BeautifulSoup(page_html, "html.parser")
@@ -386,16 +389,28 @@ def _scrape_playwright_batch(sites, cutoff, seen_links) -> list[Article]:
                                     logger.debug(f"[{name}] Skipping old article ({pub_date.date()}): {href}")
                                     continue
                             else:
-                                # No date found anywhere — block unless current year is in URL
-                                if current_year not in href:
-                                    logger.debug(f"[{name}] Skipping undatable article (no year in URL): {href}")
-                                    continue
+                                # Lenient tweak: If no date found, allow it but log a warning.
+                                logger.debug(f"[{name}] Allowing undatable article (will be deduplicated): {href}")
 
                         content_sel = site.get("content_selector", "article p")
-                        paragraphs  = page.eval_on_selector_all(
+                        # Try the primary selector first
+                        paragraphs = page.eval_on_selector_all(
                             content_sel, "els => els.map(el => el.textContent.trim())"
                         )
+                        
+                        # Fallback for TravelPulse if first selector returns modal junk
+                        if "travelpulse.com" in href and (not paragraphs or "modal window" in " ".join(paragraphs).lower()):
+                            paragraphs = page.eval_on_selector_all(
+                                ".article-body p", "els => els.map(el => el.textContent.trim())"
+                            )
+
                         content = " ".join(paragraphs)
+                        
+                        # Filter out modal window text or very short content
+                        if "modal window" in content.lower() or "javascript is disabled" in content.lower():
+                            logger.warning(f"[{name}] Detected modal or JS-block text in content for {href}")
+                            continue
+
                         if len(content) > 100:
                             articles.append(Article(
                                 title=title, url=href,
@@ -468,7 +483,7 @@ def _extract_pub_date(soup: BeautifulSoup, url: str) -> datetime | None:
             pass
 
     # 4. URL ISO date pattern  /2026/03/21/ or /2026-03-21
-    m = re.search(r'[/_-](\d{4})[/_-](0[1-9]|1[0-2])[/_-](0[1-9]|[12]\d|3[01])', url)
+    m = re.search(r'[/_-](\d{4})[/_-](\d{1,2})[/_-](\d{1,2})', url)
     if m:
         try:
             return datetime(int(m.group(1)), int(m.group(2)), int(m.group(3)),
@@ -571,6 +586,9 @@ def _try_parse_dateline(text: str) -> datetime | None:
         except ValueError:
             pass
     return None
+
+
+def _try_parse_iso(s: str) -> datetime | None:
     """Parse an ISO-8601 date string into a UTC-aware datetime."""
     import re
     if not s:
@@ -622,12 +640,8 @@ def _fetch_article_content(url: str, site: dict, headers: dict, timeout: int,
                     logger.debug(f"Skipping old article ({pub_date.date()}): {url}")
                     return "", pub_date
             else:
-                # No date found — only allow if current year appears in the URL
-                import re
-                current_year = str(datetime.now(timezone.utc).year)
-                if current_year not in url:
-                    logger.debug(f"Skipping undatable article (no year in URL): {url}")
-                    return "", None
+                # Lenient tweak: If no date found, allow it but log a warning.
+                logger.debug(f"Allowing undatable article (will be deduplicated): {url}")
 
         content = _extract_content(soup, site.get("content_selector"))
         return content, pub_date
