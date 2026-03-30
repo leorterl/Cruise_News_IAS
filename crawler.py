@@ -59,13 +59,12 @@ def collect(seen_links: set) -> list[dict]:
     config = _load_config()
     articles = _scrape_all(config, seen_links)
 
-    results = []
-    for a in articles:
-        results.append({
-            "title": a.title,
-            "link": a.url,
-            "snippet": a.content[:300] if a.content else "",
-        })
+   results.append({
+    "title": a.title,
+    "link": a.url,
+    "snippet": a.content[:300] if a.content else "",
+    "source": a.source,   # ← add this
+})
 
     logger.info(f"[crawler] Collected {len(results)} new items.")
     return results
