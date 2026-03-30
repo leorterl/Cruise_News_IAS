@@ -1,7 +1,7 @@
 settings:
-  time_window_hours: 24
-  max_articles: 5
-  request_timeout: 15
+  time_window_hours: 48
+  max_articles: 10
+  request_timeout: 20
   user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
 sites:
@@ -20,22 +20,22 @@ sites:
 
   - name: "Travel and Tour World (HTML)"
     url: "https://www.travelandtourworld.com/news/article/category/cruise-news/"
-    type: "html"
-    listing_selector: "h2 a[href*='travelandtourworld.com'], h3 a[href*='travelandtourworld.com']"
+    type: "stealth"
+    listing_selector: "h2 a, h3 a"
     content_selector: "article p, .entry-content p"
     max_articles: 10
 
   - name: "NCLH Press Releases"
     url: "https://www.nclhltd.com/news-media/press-releases"
-    type: "html"
+    type: "stealth"
     listing_selector: ".media-heading a"
     content_selector: "article p, .press-release-body p"
 
-  # --- Tier 2: HTML Scraping ---
+  # --- Tier 2: HTML/Stealth Scraping ---
   - name: "Cruise Fever"
     url: "https://cruisefever.net/category/cruise-news/"
-    type: "html"
-    listing_selector: "h3 a[href*='cruisefever.net'], h2 a[href*='cruisefever.net']"
+    type: "stealth"
+    listing_selector: ".td-module-title a, h2.entry-title a, h3.entry-title a"
     content_selector: ".td-post-content p, .tdb-block-inner p, article p"
     time_window_hours: 72
 
@@ -47,87 +47,87 @@ sites:
 
   - name: "Carnival News"
     url: "https://www.carnival-news.com/news"
-    type: "html"
-    listing_selector: "article a"
+    type: "stealth"
+    listing_selector: "article a, .news-card a"
     content_selector: ".entry-content p, article p"
 
   - name: "The Points Guy - Cruise"
     url: "https://thepointsguy.com/cruise/"
-    type: "html"
+    type: "stealth"
     listing_selector: "a[href*='/cruise/']"
     content_selector: ".articleBody p, .entry-content p"
 
   - name: "MSC Press Area (INT)"
-    url: "https://www.mscpressarea.com/en_INT/press-releases/"
-    type: "html"
+    url: "https://www.mscpressarea.com/en_INT/"
+    type: "stealth"
     listing_selector: "a[href*='/press-releases/']"
     content_selector: "p"
     url_prefix: "https://www.mscpressarea.com/en_INT"
 
   - name: "MSC Press Area (US)"
     url: "https://www.mscpressarea.com/en_US/press-releases/"
-    type: "html"
+    type: "stealth"
     listing_selector: "a[href*='/press-releases/']"
     content_selector: "p"
     url_prefix: "https://www.mscpressarea.com/en_US"
 
-  - name: "Carnival Corp"
-    url: "https://www.carnivalcorp.com/media-center/news-releases/"
-    type: "playwright"
-    listing_selector: "article a, h2 a, h3 a, .news-title a"
-    content_selector: "article p, .press-release p, .entry-content p"
-
   - name: "Holland America"
-    url: "https://www.hollandamerica.com/en/newsroom/newsfeed"
-    type: "html"
+    url: "https://www.hollandamerica.com/en/newsroom"
+    type: "stealth"
     listing_selector: "a[href*='newsroom/newsfeed/']"
     date_selector: ".cmp-text time, time, .article-date, .publish-date"
     content_selector: ".cmp-text p"
 
   - name: "Explora Journeys"
-    url: "https://explorajourneys.com/us/en/press-and-media/press"
-    type: "html"
+    url: "https://explorajourneys.com/int/en/press-and-media/press"
+    type: "stealth"
     listing_selector: "a[href*='/press-and-media/press/']"
     content_selector: ".cmp-text p"
 
   - name: "Oceania Cruises"
     url: "https://www.oceaniacruises.com/news/"
-    type: "html"
-    listing_selector: ".c33_aside a"
+    type: "stealth"
+    listing_selector: ".c33_aside a, .news-item a"
     title_selector: "h6.c33_subtitle"
     content_selector: "article p"
 
   - name: "USA Today Cruises"
     url: "https://www.usatoday.com/travel/cruises/"
     type: "stealth"
-    listing_selector: "a[href*='usatoday.com/story/travel/cruise']"
+    listing_selector: "a[href*='/story/travel/cruise']"
     content_selector: ".gnt_ar_b p, article p"
 
   - name: "Disney Cruise Line"
     url: "https://disneyexperiences.com/dcl-press/release/"
-    type: "html"
-    listing_selector: "div.col-md-4 > a[href*='/dcl-press/release/']"
-    content_selector: "article p, .entry-content p, p"
+    type: "stealth"
+    listing_selector: ".press-release-list a, .entry-title a, div.col-md-4 > a"
+    content_selector: ".entry-content p, article p, p"
 
   - name: "Seabourn"
     url: "https://www.seabourn.com/en/news/press-release"
-    type: "html"
-    listing_selector: "a[href*='press-releases/']"
-    content_selector: "article p, .cmp-text p"
+    type: "stealth"
+    listing_selector: ".press-release-item a, a[href*='press-releases/']"
+    content_selector: ".press-release-content p, .cmp-text p"
 
   - name: "Princess Cruises"
-    url: "https://www.princess.com/news/"
-    type: "html"
-    listing_selector: "a[href*='/news/news-releases/'], a[href*='/news/articles/']"
-    content_selector: "article p, .content p"
+    url: "https://www.princess.com/en-int/news/news-releases"
+    type: "stealth"
+    listing_selector: "a.news-release-link, .news-item a, a[href*='/news/news-releases/']"
+    content_selector: ".news-release-body p, .content p"
 
   # --- Stealth (curl_cffi - bypasses bot protection) ---
   - name: "Royal Caribbean Press Center"
     url: "https://www.royalcaribbeanpresscenter.com/press-releases/"
     type: "stealth"
-    listing_selector: ".pdf_item_title"
+    listing_selector: ".pdf_item_title, a.pdf_item_title"
     title_selector: ".pdf_item_title"
     content_selector: ".press-release-body p, article p, p"
+
+  - name: "Silversea Press Center"
+    url: "https://royalcaribbeangrouppresscenter.com/silversea/"
+    type: "stealth"
+    listing_selector: "a[href*='/news/']"
+    content_selector: ".press-release-body p, article p"
 
   - name: "Crystal Cruises"
     url: "https://www.crystalcruises.com/press"
@@ -141,22 +141,10 @@ sites:
     listing_selector: "article h3 a, article h4 a, .views-row a[href*='/news/']"
     content_selector: "article p, .content p, p"
 
-  - name: "CLIA Resources"
-    url: "https://cruising.org/resource-list"
+  - name: "P&O Cruises Blog"
+    url: "https://www.pocruises.com/blog"
     type: "stealth"
-    listing_selector: "article h3 a, article h4 a, .views-row a[href*='/resources/']"
-    content_selector: "article p, .content p, p"
-
-  - name: "Cunard"
-    url: "https://www.cunard.com/en-us/contact-us/press-releases"
-    type: "stealth"
-    listing_selector: "h3 a, h3"
-    content_selector: "article p, .content p, p"
-
-  - name: "P&O Cruises"
-    url: "https://www.pocruises.com/press"
-    type: "stealth"
-    listing_selector: "a[href*='press']"
+    listing_selector: "a[href*='/blog/'], .blog-post-card a"
     content_selector: "article p, .content p, p"
 
   - name: "Windstar Cruises"
@@ -169,7 +157,7 @@ sites:
   - name: "Cruise Industry News"
     url: "https://cruiseindustrynews.com/cruise-news/"
     type: "playwright"
-    listing_selector: "h2 a[href*='cruiseindustrynews.com/202'], h3 a[href*='cruiseindustrynews.com/202'], .elementor-post__title a"
+    listing_selector: "h2.entry-title a, h3.entry-title a, .elementor-post__title a"
     content_selector: ".elementor-widget-theme-post-content p, article p"
 
   - name: "NCL Newsroom"
@@ -179,13 +167,13 @@ sites:
     content_selector: "article p, .pp_release_body p"
 
   - name: "Royal Caribbean Group"
-    url: "https://royalcaribbeangrouppresscenter.com/"
+    url: "https://www.royalcaribbeangroup.com/"
     type: "playwright"
     listing_selector: "a[href*='/news/']"
     content_selector: "article p, .post-content p, p"
 
   - name: "RSSC (Regent)"
-    url: "https://www.rssc.com/news"
+    url: "https://www.rssc.com/news/2026#tabs"
     type: "playwright"
     listing_selector: "a[href*='/news/details']"
     content_selector: "article p"
@@ -203,13 +191,13 @@ sites:
     content_selector: "article p, .entry-content p"
 
   - name: "TravelPulse - Cruise"
-    url: "https://www.travelpulse.com/news/cruise"
+    url: "https://www.travelpulse.com/trending/cruise-trends"
     type: "playwright"
-    listing_selector: "a[href*='/news/cruise/']"
-    content_selector: "article p, .article-body p"
+    listing_selector: "a[href*='/news/cruise/'], a[href*='/news/']"
+    content_selector: ".article-body p, .post-content p"
 
   - name: "Travel Weekly - Cruise"
     url: "https://www.travelweekly.com/Cruise-Travel"
     type: "playwright"
     listing_selector: "a[href*='Cruise']"
-    content_selector: "article p, .article-body p"
+    content_selector: ".article-body p, article p"
