@@ -93,14 +93,16 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
 .last-updated-icon { font-size: 1rem; flex-shrink: 0; }
 .last-updated-text { flex: 1; }
 .last-updated-label { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
-.last-updated-time { font-size: 0.88rem; font-weight: 600; color: var(--text); direction: ltr; }
+.last-updated-time { font-size: 0.88rem; font-weight: 600; color: var(--text); direction: ltr; display: flex; flex-direction: column; line-height: 1.2;}
 .last-updated-time.stale { color: var(--red); }
 .last-updated-time.fresh { color: var(--green); }
 .btn-trigger { padding: 8px 16px; background: var(--teal-dim); border: 1px solid rgba(34,211,184,0.3); border-radius: var(--radius-sm); color: var(--teal); font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 0.78rem; cursor: pointer; white-space: nowrap; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
 .btn-trigger:hover { background: rgba(34,211,184,0.2); }
-.btn-trigger:disabled { opacity: 0.5; cursor: default; }
-.btn-trigger.running { animation: pulse 1.2s ease-in-out infinite; }
-@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+.btn-trigger:disabled { opacity: 0.7; cursor: default; }
+.btn-trigger.running { animation: pulse 1.5s ease-in-out infinite; }
+.btn-trigger.success-state { background: var(--green); border-color: rgba(72,187,120,0.4); color: #fff; animation: none; }
+.btn-trigger.success-state:hover { background: #3da868; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.6; } }
 
 /* ── Story cards ── */
 .stories { display: flex; flex-direction: column; gap: 16px; }
@@ -417,30 +419,30 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
 // ── Default endings ───────────────────────────────────────────────────────────
 const DEFAULT_IAS_ENDING = `הצטרפו לקבוצת הוואטסאפ<div style="font-family: Arial; line-height: 1.6;">
   <p>
-    הצטרפו לקבוצת הוואטסאפ:
+‎    הצטרפו לקבוצת הוואטסאפ:
     <a href="https://chat.whatsapp.com/H9cw6nMoqtaFb5SiAkBSFB?mode=ems_copy_t" target="_blank" style="font-weight: bold;">
       IAS – חדשות ועדכוני תיירות מהארץ ומהעולם
     </a>
   </p>
 
   <p>
-    חפשו אותנו גם בטלגרם:
+‎    חפשו אותנו גם בטלגרם:
     <a href="https://t.me/IASMagat" target="_blank">
-      מעבר לקבוצה
+‎      מעבר לקבוצה
     </a>
   </p>
 </div>`;
 
 const DEFAULT_CIN_ENDING = `<div>
-  ברוכים המצטרפים לקבוצת הפייסבוק 
+‎  ברוכים המצטרפים לקבוצת הפייסבוק 
   <a href="https://www.facebook.com/groups/172803896657404/?fref=mentions">״קרוז חלום של הפלגה״</a> – הייחודית בעולם הקרוזים. למעלה מ-16,000 חברים
   <br><br>
 
-  הצטרפו לקבוצת הוואטסאפ 
+‎  הצטרפו לקבוצת הוואטסאפ 
   <a href="https://chat.whatsapp.com/K3jjxsVlMbbAIIRaUOgNcy">“קרוז אין-חדשות חמות מהים”</a>
   <br><br>
 
-  חפשו אותנו גם בטלגרם 
+‎  חפשו אותנו גם בטלגרם 
   <a href="https://t.me/CruiseinIL">קישור לקבוצה</a>
 </div>`;
 
@@ -550,13 +552,26 @@ function fullDate(iso) { return new Date(iso).toLocaleDateString('he-IL', { week
 
 // ── Digest loading ────────────────────────────────────────────────────────────
 const digestCache = {};
-async function fetchDigest(iso) {
-  if (digestCache[iso]) return digestCache[iso];
-  const url = iso === dateStr(0)
-    ? `./digests/digest.json?t=${Date.now()}`
-    : `./digests/digest-${iso}.json`;
-  try { const r = await fetch(url); if (!r.ok) return null; const d = await r.json(); digestCache[iso] = d; return d; }
-  catch { return null; }
+async function fetchDigest(iso, forceRefresh = false) {
+  if (!forceRefresh && digestCache[iso]) return digestCache[iso];
+  
+  let url = iso === dateStr(0) ? `./digests/digest.json` : `./digests/digest-${iso}.json`;
+  if (forceRefresh || iso === dateStr(0)) url += `?t=${Date.now()}`;
+  
+  try { 
+    const r = await fetch(url); 
+    if (!r.ok) {
+      if (forceRefresh) delete digestCache[iso];
+      return null; 
+    }
+    const d = await r.json(); 
+    digestCache[iso] = d; 
+    return d; 
+  }
+  catch { 
+    if (forceRefresh) delete digestCache[iso];
+    return null; 
+  }
 }
 
 // ── Date nav ──────────────────────────────────────────────────────────────────
@@ -625,13 +640,13 @@ function switchTab(name) {
 let currentItems = [];
 let currentStories = [];
 
-async function loadAndRender(iso) {
+async function loadAndRender(iso, forceRefresh = false) {
   const container = document.getElementById('stories-container');
   container.innerHTML = `<div class="loading"><div class="spinner"></div>טוען...</div>`;
   const grid = document.getElementById('sites-grid');
   grid.innerHTML = `<div class="loading"><div class="spinner"></div>טוען מקורות...</div>`;
 
-  const digest = await fetchDigest(iso);
+  const digest = await fetchDigest(iso, forceRefresh);
   const dateEl = document.getElementById('page-date');
   const countEl = document.getElementById('page-count');
 
@@ -640,6 +655,10 @@ async function loadAndRender(iso) {
     countEl.textContent = '';
     container.innerHTML = `<div class="empty"><h3>אין דיגסט לתאריך זה</h3><p>הדיגסט ייווצר אוטומטית בשעה 03:00.</p></div>`;
     grid.innerHTML = `<div class="empty"><h3>אין נתונים</h3></div>`;
+    
+    // Update last updated text to empty
+    document.getElementById('last-updated-time').textContent = 'אין מידע';
+    document.getElementById('last-updated-time').className = 'last-updated-time stale';
     return;
   }
 
@@ -651,9 +670,41 @@ async function loadAndRender(iso) {
   if (digest.generated_at) {
     const gen = new Date(digest.generated_at);
     const now = new Date();
-    const hoursAgo = (now - gen) / 3600000;
-    const timeStr = gen.toLocaleString('he-IL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
-    timeEl.textContent = timeStr;
+    const diffMs = now - gen;
+    const hoursAgo = diffMs / 3600000;
+
+    // Full readable Hebrew date
+    const datePart = gen.toLocaleDateString('he-IL', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long'
+    });
+
+    // Time
+    const timePart = gen.toLocaleTimeString('he-IL', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+
+    // Relative time
+    const diffMinutes = Math.floor(diffMs / 60000);
+    let relative = '';
+    if (diffMinutes < 2) {
+      relative = 'עודכן עכשיו';
+    } else if (diffMinutes < 60) {
+      relative = `לפני ${diffMinutes} דקות`;
+    } else {
+      const h = Math.floor(diffMinutes / 60);
+      relative = `לפני ${h} שעות`;
+    }
+
+    timeEl.innerHTML = `
+      <div>${datePart}</div>
+      <div style="font-size:0.75rem; color:var(--muted)">
+        ${timePart} • ${relative}
+      </div>
+    `;
+
     timeEl.className = 'last-updated-time ' + (hoursAgo > 26 ? 'stale' : 'fresh');
   } else {
     // Fallback: just show the date with no time
@@ -892,40 +943,40 @@ async function generateArticle(story, site) {
 
   const prompt = `אתה עיתונאי קרוזים מנוסה שכותב לאתר ${siteName} בעברית.
 
-כתוב כתבה מקצועית בעברית על הסיפור הבא.
+‎כתוב כתבה מקצועית בעברית על הסיפור הבא.
 
-תקציר: ${story.title}${story.summary ? '\n' + story.summary : ''}
+‎תקציר: ${story.title}${story.summary ? '\n' + story.summary : ''}
 
-תוכן מלא של המקורות — השתמש בהם ככל שניתן:
+‎תוכן מלא של המקורות — השתמש בהם ככל שניתן:
 
 ${sourceParts.join('\n\n')}
 
-הנחיות כתיבה:
-- כתוב בעברית טבעית ושוטפת, כמו עיתונאי אמיתי
-- אל תכתוב כמו AI — אסור ביטויים כמו "חשוב לציין", "יש לציין", "בסופו של דבר", "בעולם המתפתח"
-- פתח בפסקה מושכת שמציגה את הסיפור
-- השתמש בכותרות H2 לחלוקה טבעית של הכתבה
-- אורך: לפחות 450 מילים, עד 600
-- כתוב בגוף שלישי, בסגנון עיתונאי
-- אל תוסיף סיכום ריק בסוף
+‎הנחיות כתיבה:
+‎- כתוב בעברית טבעית ושוטפת, כמו עיתונאי אמיתי
+‎- אל תכתוב כמו AI — אסור ביטויים כמו "חשוב לציין", "יש לציין", "בסופו של דבר", "בעולם המתפתח"
+‎- פתח בפסקה מושכת שמציגה את הסיפור
+‎- השתמש בכותרות H2 לחלוקה טבעית של הכתבה
+‎- אורך: לפחות 450 מילים, עד 600
+‎- כתוב בגוף שלישי, בסגנון עיתונאי
+‎- אל תוסיף סיכום ריק בסוף
 
-פורמט התשובה — אל תסטה ממנו:
+‎פורמט התשובה — אל תסטה ממנו:
 TITLES:
-1. [כותרת ראשונה]
-2. [כותרת שנייה]
-3. [כותרת שלישית]
+‎1. [כותרת ראשונה]
+‎2. [כותרת שנייה]
+‎3. [כותרת שלישית]
 
 DECK:
-[משפט תקציר אחד — עד 25 מילים]
+‎[משפט תקציר אחד — עד 25 מילים]
 
 ARTICLE:
-[גוף הכתבה]
+‎[גוף הכתבה]
 
 TAGS:
-[תגיות מופרדות בפסיקים]
+‎[תגיות מופרדות בפסיקים]
 
 META:
-[תיאור מטא עד 155 תווים]`;
+‎[תיאור מטא עד 155 תווים]`;
 
   try {
     const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
@@ -1056,35 +1107,35 @@ async function fetchAndWrite() {
 
   const prompt = `אתה עיתונאי קרוזים מנוסה שכותב לאתר ${siteName} בעברית.
 
-גש לכתבה הבאה, קרא אותה, והכן ממנה כתבה מקצועית בעברית:
+‎גש לכתבה הבאה, קרא אותה, והכן ממנה כתבה מקצועית בעברית:
 ${url}
 
-הנחיות כתיבה:
-- כתוב בעברית טבעית ושוטפת, כמו עיתונאי אמיתי
-- אל תכתוב כמו AI — אסור ביטויים כמו "חשוב לציין", "יש לציין", "בסופו של דבר", "בעולם המתפתח"
-- פתח בפסקה מושכת שמציגה את הסיפור
-- השתמש בכותרות H2 לחלוקה טבעית של הכתבה
-- אורך: לפחות 450 מילים, עד 600
-- כתוב בגוף שלישי, בסגנון עיתונאי
-- אל תוסיף סיכום ריק בסוף
+‎הנחיות כתיבה:
+‎- כתוב בעברית טבעית ושוטפת, כמו עיתונאי אמיתי
+‎- אל תכתוב כמו AI — אסור ביטויים כמו "חשוב לציין", "יש לציין", "בסופו של דבר", "בעולם המתפתח"
+‎- פתח בפסקה מושכת שמציגה את הסיפור
+‎- השתמש בכותרות H2 לחלוקה טבעית של הכתבה
+‎- אורך: לפחות 450 מילים, עד 600
+‎- כתוב בגוף שלישי, בסגנון עיתונאי
+‎- אל תוסיף סיכום ריק בסוף
 
-פורמט התשובה — אל תסטה ממנו:
+‎פורמט התשובה — אל תסטה ממנו:
 TITLES:
-1. [כותרת ראשונה]
-2. [כותרת שנייה]
-3. [כותרת שלישית]
+‎1. [כותרת ראשונה]
+‎2. [כותרת שנייה]
+‎3. [כותרת שלישית]
 
 DECK:
-[משפט תקציר אחד — עד 25 מילים]
+‎[משפט תקציר אחד — עד 25 מילים]
 
 ARTICLE:
-[גוף הכתבה]
+‎[גוף הכתבה]
 
 TAGS:
-[תגיות מופרדות בפסיקים]
+‎[תגיות מופרדות בפסיקים]
 
 META:
-[תיאור מטא עד 155 תווים]`;
+‎[תיאור מטא עד 155 תווים]`;
 
   try {
     const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
@@ -1117,7 +1168,36 @@ META:
 }
 
 // ── Manual trigger ────────────────────────────────────────────────────────────
+let isWorkflowRunning = false;
+let isWorkflowSuccess = false;
+
+function resetTriggerBtn(btn) {
+  isWorkflowRunning = false;
+  isWorkflowSuccess = false;
+  btn.disabled = false;
+  btn.className = 'btn-trigger';
+  btn.innerHTML = '⚡ עדכן עכשיו';
+}
+
+function setBtnLoadingState(btn, text) {
+  btn.innerHTML = `<div class="spinner" style="width:14px;height:14px;margin:0;border-width:2px;border-top-color:var(--teal)"></div> ${text}`;
+}
+
 async function triggerUpdate() {
+  const btn = document.getElementById('btn-trigger');
+
+  // If already succeeded, click acts as a "Refresh"
+  if (isWorkflowSuccess) {
+    resetTriggerBtn(btn);
+    // Force refresh bypassing cache
+    loadAndRender(activeDate, true);
+    buildDateNav(); // Update badges on sidebar too
+    return;
+  }
+
+  // Prevent double clicks while running
+  if (isWorkflowRunning) return;
+
   const token = loadGhToken();
   const repo  = loadGhRepo();
   if (!token || !repo) {
@@ -1125,11 +1205,14 @@ async function triggerUpdate() {
     openSettings();
     return;
   }
-  const btn = document.getElementById('btn-trigger');
+  
+  isWorkflowRunning = true;
   btn.disabled = true;
   btn.classList.add('running');
-  btn.textContent = '⏳ מפעיל...';
+  setBtnLoadingState(btn, 'מפעיל...');
+  
   try {
+    // 1. Dispatch the workflow event
     const r = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/daily_digest.yml/dispatches`, {
       method: 'POST',
       headers: {
@@ -1139,23 +1222,75 @@ async function triggerUpdate() {
       },
       body: JSON.stringify({ ref: 'main' })
     });
-    if (r.status === 204) {
-      btn.textContent = '✓ הופעל! (כ-3 דקות)';
-      btn.classList.remove('running');
-      setTimeout(() => {
-        btn.disabled = false;
-        btn.textContent = '⚡ עדכן עכשיו';
-      }, 5000);
-    } else {
+    
+    if (r.status !== 204) {
       const err = await r.json().catch(() => ({}));
       throw new Error(err.message || `HTTP ${r.status}`);
     }
+
+    setBtnLoadingState(btn, 'מוקצה...');
+    
+    // 2. Wait a bit for GitHub to create the run
+    await new Promise(res => setTimeout(res, 5000));
+    
+    // 3. Start Polling the latest run
+    await pollWorkflowRun(repo, token, btn);
+
   } catch(e) {
     alert(`שגיאה בהפעלת הדיגסט: ${e.message}`);
-    btn.disabled = false;
-    btn.classList.remove('running');
-    btn.textContent = '⚡ עדכן עכשיו';
+    resetTriggerBtn(btn);
   }
+}
+
+async function pollWorkflowRun(repo, token, btn) {
+  let attempts = 0;
+  const maxAttempts = 60; // Max 5 minutes (60 * 5s)
+
+  while (attempts < maxAttempts) {
+    attempts++;
+    try {
+      const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/daily_digest.yml/runs?per_page=1`, {
+        headers: {
+          'Authorization': `token ${token}`,
+          'Accept': 'application/vnd.github.v3+json'
+        }
+      });
+      const data = await res.json();
+      
+      if (data.workflow_runs && data.workflow_runs.length > 0) {
+        const latestRun = data.workflow_runs[0];
+        const status = latestRun.status;         // e.g. queued, in_progress, completed
+        const conclusion = latestRun.conclusion; // e.g. success, failure
+
+        if (status === 'completed') {
+          if (conclusion === 'success') {
+            isWorkflowRunning = false;
+            isWorkflowSuccess = true;
+            btn.classList.remove('running');
+            btn.classList.add('success-state');
+            btn.innerHTML = '🔄 הושלם! לחץ לרענון';
+            btn.disabled = false;
+            return; // We're done
+          } else {
+            throw new Error(`הריצה ב-GitHub נכשלה (${conclusion})`);
+          }
+        } else {
+          // Still running
+          const statusHe = status === 'queued' ? 'מוקצה...' : 'מעבד...';
+          setBtnLoadingState(btn, statusHe);
+        }
+      }
+    } catch(e) {
+      console.error("Polling error:", e);
+      // We don't throw here immediately in case it's a temporary network hiccup
+      if (e.message.includes('נכשלה')) throw e;
+    }
+    
+    // Wait 5 seconds before checking again
+    await new Promise(r => setTimeout(r, 5000));
+  }
+  
+  throw new Error("Timeout - הריצה ב-GitHub לוקחת יותר מדי זמן");
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
