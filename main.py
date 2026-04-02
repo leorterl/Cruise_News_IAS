@@ -1,12 +1,11 @@
 import json
 import os
-from datetime import date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from pathlib import Path
 
 from crawler import collect
 from ai import summarize
 from send import send_message, send_link
-from datetime import datetime, date, timedelta, timezone
 
 SEEN_FILE = "seen_links.json"
 DIGEST_DIR = Path("digests")
@@ -45,12 +44,14 @@ def save_digest(raw_items: list, ai_summary: str):
     """Save digest as both digests/digest.json (latest) and digests/digest-YYYY-MM-DD.json (history)."""
     DIGEST_DIR.mkdir(exist_ok=True)
     today = str(date.today())
-   digest = {
-    "date": today,
-    "generated_at": datetime.now(timezone.utc).isoformat(),
-    "summary": ai_summary,
-    "items": raw_items
-}
+
+    digest = {
+        "date": today,
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+        "summary": ai_summary,
+        "items": raw_items
+    }
+    
     payload = json.dumps(digest, ensure_ascii=False, indent=2)
 
     with open(DIGEST_FILE, "w", encoding="utf-8") as f:
