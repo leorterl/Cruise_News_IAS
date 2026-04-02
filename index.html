@@ -88,6 +88,20 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
 .page-date span { color: var(--gold); }
 .page-count { font-size: 0.78rem; color: var(--muted); background: var(--surface2); padding: 5px 12px; border-radius: 20px; }
 
+/* ── Last updated + trigger ── */
+.last-updated-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; padding: 12px 18px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); }
+.last-updated-icon { font-size: 1rem; flex-shrink: 0; }
+.last-updated-text { flex: 1; }
+.last-updated-label { font-size: 0.65rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+.last-updated-time { font-size: 0.88rem; font-weight: 600; color: var(--text); direction: ltr; }
+.last-updated-time.stale { color: var(--red); }
+.last-updated-time.fresh { color: var(--green); }
+.btn-trigger { padding: 8px 16px; background: var(--teal-dim); border: 1px solid rgba(34,211,184,0.3); border-radius: var(--radius-sm); color: var(--teal); font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 0.78rem; cursor: pointer; white-space: nowrap; transition: all 0.15s; display: flex; align-items: center; gap: 6px; }
+.btn-trigger:hover { background: rgba(34,211,184,0.2); }
+.btn-trigger:disabled { opacity: 0.5; cursor: default; }
+.btn-trigger.running { animation: pulse 1.2s ease-in-out infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
 /* ── Story cards ── */
 .stories { display: flex; flex-direction: column; gap: 16px; }
 .story-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: start; transition: border-color 0.2s, transform 0.15s; animation: fadeUp 0.3s ease both; }
@@ -295,6 +309,16 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
       <div class="page-count" id="page-count"></div>
     </div>
 
+    <!-- Last updated bar -->
+    <div class="last-updated-bar">
+      <div class="last-updated-icon">🕐</div>
+      <div class="last-updated-text">
+        <div class="last-updated-label">עדכון אחרון</div>
+        <div class="last-updated-time" id="last-updated-time">טוען...</div>
+      </div>
+      <button class="btn-trigger" id="btn-trigger" onclick="triggerUpdate()">⚡ עדכן עכשיו</button>
+    </div>
+
     <!-- Tabs -->
     <div class="tabs">
       <button class="tab-btn active" id="tab-digest" onclick="switchTab('digest')">📰 סיפורים</button>
@@ -361,6 +385,15 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
       <div class="settings-field">
         <label>מפתח Gemini API</label>
         <input type="password" id="s-apikey" placeholder="AIza..." dir="ltr">
+      </div>
+      <div class="settings-field">
+        <label>GitHub Token (להפעלת עדכון ידני)</label>
+        <input type="password" id="s-gh-token" placeholder="ghp_..." dir="ltr">
+        <div class="field-note">Personal Access Token עם הרשאת workflow. נדרש להפעלת הדיגסט מהדשבורד.</div>
+      </div>
+      <div class="settings-field">
+        <label>GitHub Repo</label>
+        <input type="text" id="s-gh-repo" placeholder="leorterl/Cruise_News_IAS" dir="ltr">
       </div>
       <div class="settings-field">
         <div class="settings-site-label"><div class="settings-site-dot ias"></div><label style="margin:0">סיומת כתבה — IAS</label></div>
@@ -435,6 +468,8 @@ const ALL_SITES = [
 function loadKey() { return localStorage.getItem('gemini_api_key') || ''; }
 function loadIasEnding() { return localStorage.getItem('ias_ending') || DEFAULT_IAS_ENDING; }
 function loadCinEnding() { return localStorage.getItem('cin_ending') || DEFAULT_CIN_ENDING; }
+function loadGhToken() { return localStorage.getItem('gh_token') || ''; }
+function loadGhRepo() { return localStorage.getItem('gh_repo') || 'leorterl/Cruise_News_IAS'; }
 
 function saveKey() {
   const val = document.getElementById('api-key').value.trim();
@@ -455,6 +490,8 @@ function initKey() {
 // ── Settings panel ────────────────────────────────────────────────────────────
 function openSettings() {
   document.getElementById('s-apikey').value = loadKey();
+  document.getElementById('s-gh-token').value = loadGhToken();
+  document.getElementById('s-gh-repo').value = loadGhRepo();
   document.getElementById('s-ias-ending').value = loadIasEnding();
   document.getElementById('s-cin-ending').value = loadCinEnding();
   document.getElementById('settings-overlay').classList.add('open');
@@ -464,6 +501,10 @@ function handleSettingsOverlay(e) { if (e.target === document.getElementById('se
 function saveSettings() {
   const key = document.getElementById('s-apikey').value.trim();
   if (key) { localStorage.setItem('gemini_api_key', key); document.getElementById('api-key').value = key; setBadge(true); }
+  const ghToken = document.getElementById('s-gh-token').value.trim();
+  if (ghToken) localStorage.setItem('gh_token', ghToken);
+  const ghRepo = document.getElementById('s-gh-repo').value.trim();
+  if (ghRepo) localStorage.setItem('gh_repo', ghRepo);
   localStorage.setItem('ias_ending', document.getElementById('s-ias-ending').value);
   localStorage.setItem('cin_ending', document.getElementById('s-cin-ending').value);
   closeSettings();
@@ -589,6 +630,21 @@ async function loadAndRender(iso) {
 
   const parts = fullDate(digest.date).split(' ');
   dateEl.innerHTML = `${parts[0]} <span>${parts.slice(1).join(' ')}</span>`;
+
+  // ── Last updated bar ──
+  const timeEl = document.getElementById('last-updated-time');
+  if (digest.generated_at) {
+    const gen = new Date(digest.generated_at);
+    const now = new Date();
+    const hoursAgo = (now - gen) / 3600000;
+    const timeStr = gen.toLocaleString('he-IL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+    timeEl.textContent = timeStr;
+    timeEl.className = 'last-updated-time ' + (hoursAgo > 26 ? 'stale' : 'fresh');
+  } else {
+    // Fallback: just show the date with no time
+    timeEl.textContent = digest.date;
+    timeEl.className = 'last-updated-time';
+  }
 
   currentItems = digest.items || [];
   currentStories = parseStories(digest.summary, currentItems);
@@ -741,9 +797,64 @@ function handleOverlayClick(e) {
 }
 
 // ── Article generation ────────────────────────────────────────────────────────
+
+// Safe clipboard store — avoids broken inline JSON.stringify in onclick attrs
+const _clipStore = {};
+let _clipId = 0;
+function storeClip(text) {
+  const id = 'clip_' + (++_clipId);
+  _clipStore[id] = text;
+  return id;
+}
+function copyClip(id, btn) {
+  const text = _clipStore[id] || '';
+  const doFeedback = () => {
+    const orig = btn.textContent;
+    btn.textContent = '✓ הועתק';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  };
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(text).then(doFeedback).catch(() => fallbackCopy(text, doFeedback));
+  } else {
+    fallbackCopy(text, doFeedback);
+  }
+}
+function fallbackCopy(text, cb) {
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+  document.body.appendChild(ta);
+  ta.focus(); ta.select();
+  try { document.execCommand('copy'); } catch(e) {}
+  document.body.removeChild(ta);
+  if (cb) cb();
+}
+
+async function fetchArticleText(url) {
+  try {
+    const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
+    const r = await fetch(proxyUrl, { signal: AbortSignal.timeout(12000) });
+    if (!r.ok) return null;
+    const data = await r.json();
+    const html = data.contents || '';
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    doc.querySelectorAll('script,style,nav,footer,header,aside,[class*="menu"],[class*="sidebar"],[class*="cookie"],[id*="cookie"]').forEach(el => el.remove());
+    const selectors = ['article', '[class*="article-body"]', '[class*="post-content"]', '[class*="entry-content"]', '[class*="press-release"]', 'main', '.content', 'body'];
+    for (const sel of selectors) {
+      const el = doc.querySelector(sel);
+      if (el) {
+        const t = (el.innerText || el.textContent || '').trim();
+        if (t.length > 200) return t.slice(0, 6000);
+      }
+    }
+    return null;
+  } catch { return null; }
+}
+
 async function generateArticle(story, site) {
   const body = document.getElementById('modal-body');
-  body.innerHTML = `<div class="modal-generating"><div class="spinner"></div><p>כותב כתבה בעברית...</p></div>`;
 
   const apiKey = loadKey();
   if (!apiKey) {
@@ -753,16 +864,26 @@ async function generateArticle(story, site) {
 
   const ending = site === 'ias' ? loadIasEnding() : loadCinEnding();
   const siteName = site === 'ias' ? 'IAS' : 'CruiseIn';
-  const sourceLinks = story.sources.map(s => s.url).join('\n');
+
+  // Step 1: fetch full article text from each source
+  body.innerHTML = `<div class="modal-generating"><div class="spinner"></div><p>קורא את הכתבות המקוריות...</p></div>`;
+  const sourceParts = [];
+  for (const src of story.sources) {
+    const fullText = await fetchArticleText(src.url);
+    sourceParts.push(`--- מקור: ${src.url} ---\n${fullText || '(לא ניתן לטעון תוכן)'}`);
+  }
+
+  body.innerHTML = `<div class="modal-generating"><div class="spinner"></div><p>כותב כתבה בעברית...</p></div>`;
 
   const prompt = `אתה עיתונאי קרוזים מנוסה שכותב לאתר ${siteName} בעברית.
 
-כתוב כתבה מקצועית בעברית על הסיפור הבא:
+כתוב כתבה מקצועית בעברית על הסיפור הבא.
 
-כותרת: ${story.title}
-תקציר: ${story.summary}
-קישורי מקורות:
-${sourceLinks}
+תקציר: ${story.title}${story.summary ? '\n' + story.summary : ''}
+
+תוכן מלא של המקורות — השתמש בהם ככל שניתן:
+
+${sourceParts.join('\n\n')}
 
 הנחיות כתיבה:
 - כתוב בעברית טבעית ושוטפת, כמו עיתונאי אמיתי
@@ -776,7 +897,7 @@ ${sourceLinks}
 פורמט התשובה — אל תסטה ממנו:
 TITLES:
 1. [כותרת ראשונה]
-2. [כותרת שנייה]  
+2. [כותרת שנייה]
 3. [כותרת שלישית]
 
 DECK:
@@ -813,14 +934,21 @@ function renderArticle(body, text, ending, story) {
     return m ? m[1].trim() : '';
   };
   const titlesRaw = get('TITLES', 'DECK');
-  const deck = get('DECK', 'ARTICLE');
-  const article = get('ARTICLE', 'TAGS');
-  const tags = get('TAGS', 'META');
-  const meta = get('META', '~~~');
+  const deck      = get('DECK', 'ARTICLE');
+  const article   = get('ARTICLE', 'TAGS');
+  const tags      = get('TAGS', 'META');
+  const meta      = get('META', '~~~');
 
   const titles = titlesRaw.split('\n').map(l => l.replace(/^\d+\.\s*/, '').trim()).filter(Boolean);
   const fullArticle = article + (ending ? '\n\n' + ending : '');
   const metaLen = meta.length;
+
+  // Store content safely — no inline text in onclick
+  const titleIds   = titles.map(t => storeClip(t));
+  const deckId     = storeClip(deck);
+  const articleId  = storeClip(fullArticle);
+  const tagsId     = storeClip(tags);
+  const metaId     = storeClip(meta);
 
   body.innerHTML = `
     <div class="modal-sources">
@@ -829,33 +957,33 @@ function renderArticle(body, text, ending, story) {
     </div>
 
     <div class="art-section">
-      <div class="art-label">כותרות <button class="btn-copy" onclick="copyEl('titles-block', this)">העתק כותרת 1</button></div>
-      <div class="titles-list" id="titles-block">
+      <div class="art-label">כותרות <button class="btn-copy" onclick="copyClip('${titleIds[0] || ''}', this)">העתק כותרת 1</button></div>
+      <div class="titles-list">
         ${titles.map((t, i) => `
           <div class="title-opt">
             <span>${esc(t)}</span>
-            <button class="btn-copy" onclick="copyText(${JSON.stringify(t)}, this)">העתק</button>
+            <button class="btn-copy" onclick="copyClip('${titleIds[i]}', this)">העתק</button>
           </div>`).join('')}
       </div>
     </div>
 
     <div class="art-section">
-      <div class="art-label">ליד (Deck) <button class="btn-copy" onclick="copyText(${JSON.stringify(deck)}, this)">העתק</button></div>
-      <div class="field-box" id="deck-box">${esc(deck)}</div>
+      <div class="art-label">ליד (Deck) <button class="btn-copy" onclick="copyClip('${deckId}', this)">העתק</button></div>
+      <div class="field-box">${esc(deck)}</div>
     </div>
 
     <div class="art-section">
-      <div class="art-label">כתבה מלאה <button class="btn-copy" onclick="copyText(${JSON.stringify(fullArticle)}, this)">העתק</button></div>
+      <div class="art-label">כתבה מלאה <button class="btn-copy" onclick="copyClip('${articleId}', this)">העתק</button></div>
       <div class="article-box">${esc(fullArticle)}</div>
     </div>
 
     <div class="art-section">
-      <div class="art-label">תגיות <button class="btn-copy" onclick="copyText(${JSON.stringify(tags)}, this)">העתק</button></div>
+      <div class="art-label">תגיות <button class="btn-copy" onclick="copyClip('${tagsId}', this)">העתק</button></div>
       <div class="field-box">${esc(tags)}</div>
     </div>
 
     <div class="art-section">
-      <div class="art-label">Meta Description <button class="btn-copy" onclick="copyText(${JSON.stringify(meta)}, this)">העתק</button></div>
+      <div class="art-label">Meta Description <button class="btn-copy" onclick="copyClip('${metaId}', this)">העתק</button></div>
       <div class="field-box">${esc(meta)}</div>
       <div class="meta-count ${metaLen > 155 ? 'warn' : metaLen >= 120 ? 'ok' : ''}">${metaLen} / 155 תווים</div>
     </div>`;
@@ -865,18 +993,154 @@ function renderArticle(body, text, ending, story) {
 function esc(str) {
   return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-function copyText(text, btn) {
-  navigator.clipboard.writeText(text).then(() => {
-    btn.textContent = '✓ הועתק';
-    btn.classList.add('copied');
-    setTimeout(() => { btn.textContent = 'העתק'; btn.classList.remove('copied'); }, 2000);
-  });
-}
+// copyText kept for any legacy callers
+function copyText(text, btn) { const id = storeClip(text); copyClip(id, btn); }
 function copyEl(id, btn) {
   const el = document.getElementById(id);
   if (!el) return;
   const first = el.querySelector('.title-opt span');
   if (first) copyText(first.textContent, btn);
+}
+
+// ── Manual link tab ──────────────────────────────────────────────────────────
+let manualSite = 'cin';
+
+function setManualSite(site) {
+  manualSite = site;
+  document.getElementById('manual-ias').className = 'site-btn' + (site === 'ias' ? ' active-ias' : '');
+  document.getElementById('manual-cin').className = 'site-btn' + (site === 'cin' ? ' active-cin' : '');
+}
+
+async function fetchAndWrite() {
+  const url = document.getElementById('manual-url').value.trim();
+  const status = document.getElementById('manual-status');
+  const output = document.getElementById('manual-output');
+  const btn = document.getElementById('manual-go-btn');
+
+  if (!url || !url.startsWith('http')) {
+    status.textContent = 'נא להכניס קישור תקין שמתחיל ב-https://';
+    status.className = 'manual-status error';
+    return;
+  }
+
+  const apiKey = loadKey();
+  if (!apiKey) {
+    status.textContent = 'אין מפתח Gemini — פתח הגדרות והכנס מפתח';
+    status.className = 'manual-status error';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'טוען...';
+  output.innerHTML = '';
+  status.className = 'manual-status loading';
+  status.textContent = 'שולח את הקישור ל-Gemini לקריאה וסיכום...';
+
+  const ending = manualSite === 'ias' ? loadIasEnding() : loadCinEnding();
+  const siteName = manualSite === 'ias' ? 'IAS' : 'CruiseIn';
+
+  const prompt = `אתה עיתונאי קרוזים מנוסה שכותב לאתר ${siteName} בעברית.
+
+גש לכתבה הבאה, קרא אותה, והכן ממנה כתבה מקצועית בעברית:
+${url}
+
+הנחיות כתיבה:
+- כתוב בעברית טבעית ושוטפת, כמו עיתונאי אמיתי
+- אל תכתוב כמו AI — אסור ביטויים כמו "חשוב לציין", "יש לציין", "בסופו של דבר", "בעולם המתפתח"
+- פתח בפסקה מושכת שמציגה את הסיפור
+- השתמש בכותרות H2 לחלוקה טבעית של הכתבה
+- אורך: לפחות 450 מילים, עד 600
+- כתוב בגוף שלישי, בסגנון עיתונאי
+- אל תוסיף סיכום ריק בסוף
+
+פורמט התשובה — אל תסטה ממנו:
+TITLES:
+1. [כותרת ראשונה]
+2. [כותרת שנייה]
+3. [כותרת שלישית]
+
+DECK:
+[משפט תקציר אחד — עד 25 מילים]
+
+ARTICLE:
+[גוף הכתבה]
+
+TAGS:
+[תגיות מופרדות בפסיקים]
+
+META:
+[תיאור מטא עד 155 תווים]`;
+
+  try {
+    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }],
+        generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
+        tools: [{ url_context: {} }]
+      })
+    });
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error?.message || 'API error');
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!text) throw new Error('לא התקבלה תשובה מ-Gemini');
+
+    status.textContent = '';
+    status.className = 'manual-status';
+
+    // Render into output using the same renderArticle, passing a fake story object
+    const fakeStory = { sources: [{ url, label: url }] };
+    renderArticle(output, text, ending, fakeStory);
+  } catch (err) {
+    status.textContent = `שגיאה: ${err.message}`;
+    status.className = 'manual-status error';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '✍️ כתוב כתבה';
+  }
+}
+
+// ── Manual trigger ────────────────────────────────────────────────────────────
+async function triggerUpdate() {
+  const token = loadGhToken();
+  const repo  = loadGhRepo();
+  if (!token || !repo) {
+    alert('נא להוסיף GitHub Token ו-Repo בהגדרות תחילה');
+    openSettings();
+    return;
+  }
+  const btn = document.getElementById('btn-trigger');
+  btn.disabled = true;
+  btn.classList.add('running');
+  btn.textContent = '⏳ מפעיל...';
+  try {
+    const r = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/daily_digest.yml/dispatches`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ ref: 'main' })
+    });
+    if (r.status === 204) {
+      btn.textContent = '✓ הופעל! (כ-3 דקות)';
+      btn.classList.remove('running');
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.textContent = '⚡ עדכן עכשיו';
+      }, 5000);
+    } else {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.message || `HTTP ${r.status}`);
+    }
+  } catch(e) {
+    alert(`שגיאה בהפעלת הדיגסט: ${e.message}`);
+    btn.disabled = false;
+    btn.classList.remove('running');
+    btn.textContent = '⚡ עדכן עכשיו';
+  }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────────
