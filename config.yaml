@@ -5,13 +5,165 @@ settings:
   user_agent: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
 
 sites:
-  # --- Tier 1: RSS ---
+  # 1) Official sources first
+  - name: "Royal Caribbean Press Center"
+    url: "https://www.royalcaribbeanpresscenter.com/press-releases/"
+    type: "stealth"
+    listing_selector: ".pdf_item_title, a.pdf_item_title"
+    title_selector: ".pdf_item_title"
+    content_selector: ".press-release-body p, article p, p"
+    url_block_patterns:
+      - "/tag/"
+      - "/category/"
+      - "/author/"
+      - "/page/"
+      - "/search"
+
+  - name: "Celebrity Cruises Press Center"
+    url: "https://royalcaribbeangrouppresscenter.com/celebritycruises/news"
+    type: "playwright"
+    listing_selector: "a[href*='/news/']"
+    content_selector: ".press-release-body p, article p"
+    url_block_patterns:
+      - "/tag/"
+      - "/category/"
+      - "/author/"
+      - "/page/"
+      - "/search"
+
+  # 2) Royal Caribbean Blog bumped to #3
   - name: "Royal Caribbean Blog"
     url: "https://www.royalcaribbeanblog.com/"
     type: "rss"
     rss_url: "https://www.royalcaribbeanblog.com/rss.xml"
     content_selector: ".field-item p"
 
+  # 3) Best editorial / trade mix
+  - name: "Cruise Hive"
+    url: "https://www.cruisehive.com/category/cruise-news"
+    type: "rss"
+    rss_url: "https://www.cruisehive.com/feed"
+    content_selector: ".entry-content p, article p, p"
+    max_articles: 12
+    url_allow_patterns:
+      - "/cruisehive.com/"
+    title_block_patterns:
+      - "tips"
+      - "tricks"
+      - "freebies"
+      - "guide"
+      - "what to pack"
+
+  - name: "Cruise Critic News"
+    url: "https://www.cruisecritic.com/news"
+    type: "stealth"
+    listing_selector: "a[href*='/news/']"
+    content_selector: "article p, .article-content p, .body-text p, p"
+    max_articles: 10
+    url_allow_patterns:
+      - "/cruisecritic.com/news/"
+    url_block_patterns:
+      - "/page/"
+      - "/tag/"
+      - "/category/"
+      - "/author/"
+    strip_phrases:
+      - "Explore Now"
+      - "All the latest on"
+      - "From photos and videos to live coverage and more."
+
+  - name: "Cruise Industry News"
+    url: "https://cruiseindustrynews.com/cruise-news/"
+    type: "playwright"
+    listing_selector: "h2.entry-title a, h3.entry-title a, .elementor-post__title a"
+    content_selector: ".elementor-widget-theme-post-content p, article p"
+
+  - name: "Cruise Fever"
+    url: "https://cruisefever.net/category/cruise-news/"
+    type: "stealth"
+    listing_selector: ".td-module-title a, h2.entry-title a, h3.entry-title a"
+    content_selector: ".td-post-content p, .tdb-block-inner p, article p"
+    time_window_hours: 72
+
+  - name: "Travel Weekly - Cruise"
+    url: "https://www.travelweekly.com/Cruise-Travel"
+    type: "playwright"
+    listing_selector: "a[href*='Cruise']"
+    content_selector: ".article-body p, article p"
+
+  - name: "TravelPulse - Cruise"
+    url: "https://www.travelpulse.com/trending/cruise-trends"
+    type: "playwright"
+    listing_selector: "a[href*='/news/cruise/'], a[href*='/news/']"
+    content_selector: ".article-body p, .post-content p"
+
+  # 4) Strong supporting sources
+  - name: "MedCruise"
+    url: "https://www.medcruise.com/news"
+    type: "stealth"
+    listing_selector: "a[href*='/news/']"
+    content_selector: "article p, .entry-content p, .post-content p, p"
+    max_articles: 8
+    url_allow_patterns:
+      - "/medcruise.com/news/"
+    url_block_patterns:
+      - "/news/page/"
+      - "/tag/"
+      - "/category/"
+      - "/author/"
+      - "/search"
+
+  - name: "Travel Market Report - Cruise"
+    url: "https://www.travelmarketreport.com/cruise"
+    type: "stealth"
+    listing_selector: "a[href*='/cruises/articles/'], a[href*='/news/articles/']"
+    content_selector: "article p, .article-body p, p"
+    max_articles: 6
+    url_allow_patterns:
+      - "/travelmarketreport.com/cruises/articles/"
+      - "/travelmarketreport.com/news/articles/"
+    url_block_patterns:
+      - "/page/"
+      - "/tag/"
+      - "/category/"
+      - "/author/"
+
+  - name: "USA Today Cruises"
+    url: "https://www.usatoday.com/travel/cruises/"
+    type: "stealth"
+    listing_selector: "a[href*='/story/travel/cruise'], a[href*='/story/travel/cruises/']"
+    content_selector: ".gnt_ar_b p, article p"
+
+  - name: "The Points Guy - Cruise"
+    url: "https://thepointsguy.com/cruise/"
+    type: "stealth"
+    listing_selector: "a[href*='/cruise/']"
+    content_selector: ".articleBody p, .entry-content p"
+
+  - name: "Breaking Travel News - Cruise"
+    url: "https://www.breakingtravelnews.com/news/category/cruise/"
+    type: "playwright"
+    listing_selector: "article h4 a"
+    content_selector: "article p, .entry-content p"
+
+  - name: "Cruzely"
+    url: "https://www.cruzely.com/"
+    type: "html"
+    listing_selector: "a[href*='/']"
+    content_selector: "article p, .entry-content p, p"
+    max_articles: 6
+    url_block_patterns:
+      - "/page/"
+      - "/tag/"
+      - "/category/"
+      - "/author/"
+    title_block_patterns:
+      - "best"
+      - "guide"
+      - "everything to know"
+      - "what to pack"
+
+  # 5) Existing RSS / HTML sources from current config
   - name: "Travel and Tour World (RSS)"
     url: "https://www.travelandtourworld.com/news/article/category/cruise-news/"
     type: "rss"
@@ -31,14 +183,6 @@ sites:
     listing_selector: ".media-heading a"
     content_selector: "article p, .press-release-body p"
 
-  # --- Tier 2: HTML/Stealth Scraping ---
-  - name: "Cruise Fever"
-    url: "https://cruisefever.net/category/cruise-news/"
-    type: "stealth"
-    listing_selector: ".td-module-title a, h2.entry-title a, h3.entry-title a"
-    content_selector: ".td-post-content p, .tdb-block-inner p, article p"
-    time_window_hours: 72
-
   - name: "Carnival Corp"
     url: "https://www.carnivalcorp.com/media-center/news-releases/"
     type: "playwright"
@@ -50,12 +194,6 @@ sites:
     type: "stealth"
     listing_selector: "article a, .news-card a"
     content_selector: ".entry-content p, article p"
-
-  - name: "The Points Guy - Cruise"
-    url: "https://thepointsguy.com/cruise/"
-    type: "stealth"
-    listing_selector: "a[href*='/cruise/']"
-    content_selector: ".articleBody p, .entry-content p"
 
   - name: "MSC Press Area (INT)"
     url: "https://www.mscpressarea.com/en_INT/"
@@ -91,12 +229,6 @@ sites:
     title_selector: "h6.c33_subtitle"
     content_selector: "article p"
 
-  - name: "USA Today Cruises"
-    url: "https://www.usatoday.com/travel/cruises/"
-    type: "stealth"
-    listing_selector: "a[href*='/story/travel/cruise']"
-    content_selector: ".gnt_ar_b p, article p"
-
   - name: "Disney Cruise Line"
     url: "https://disneyexperiences.com/dcl-press/release/"
     type: "stealth"
@@ -114,14 +246,6 @@ sites:
     type: "stealth"
     listing_selector: "a.news-release-link, .news-item a, a[href*='/news/news-releases/']"
     content_selector: ".news-release-body p, .content p"
-
-  # --- Stealth (curl_cffi - bypasses bot protection) ---
-  - name: "Royal Caribbean Press Center"
-    url: "https://www.royalcaribbeanpresscenter.com/press-releases/"
-    type: "stealth"
-    listing_selector: ".pdf_item_title, a.pdf_item_title"
-    title_selector: ".pdf_item_title"
-    content_selector: ".press-release-body p, article p, p"
 
   - name: "Silversea Press Center"
     url: "https://royalcaribbeangrouppresscenter.com/silversea/"
@@ -153,13 +277,6 @@ sites:
     listing_selector: "h4 a"
     content_selector: "article p, .entry-content p"
 
-  # --- Playwright (JS-rendered SPAs) ---
-  - name: "Cruise Industry News"
-    url: "https://cruiseindustrynews.com/cruise-news/"
-    type: "playwright"
-    listing_selector: "h2.entry-title a, h3.entry-title a, .elementor-post__title a"
-    content_selector: ".elementor-widget-theme-post-content p, article p"
-
   - name: "NCL Newsroom"
     url: "https://www.ncl.com/newsroom/en-us/"
     type: "playwright"
@@ -178,26 +295,10 @@ sites:
     listing_selector: "a[href*='/news/details']"
     content_selector: "article p"
 
-  - name: "Celebrity Cruises Press Center"
-    url: "https://royalcaribbeangrouppresscenter.com/celebritycruises/news"
-    type: "playwright"
-    listing_selector: "a[href*='/news/']"
-    content_selector: ".press-release-body p, article p"
-
-  - name: "Breaking Travel News - Cruise"
-    url: "https://www.breakingtravelnews.com/news/category/cruise/"
-    type: "playwright"
-    listing_selector: "article h4 a"
-    content_selector: "article p, .entry-content p"
-
-  - name: "TravelPulse - Cruise"
-    url: "https://www.travelpulse.com/trending/cruise-trends"
-    type: "playwright"
-    listing_selector: "a[href*='/news/cruise/'], a[href*='/news/']"
-    content_selector: ".article-body p, .post-content p"
-
-  - name: "Travel Weekly - Cruise"
-    url: "https://www.travelweekly.com/Cruise-Travel"
-    type: "playwright"
-    listing_selector: "a[href*='Cruise']"
-    content_selector: ".article-body p, article p"
+  # 6) Re-enabled for testing
+  - name: "CruiseMapper News"
+    url: "https://www.cruisemapper.com/news"
+    type: "rss"
+    rss_url: "https://www.cruisemapper.com/rss"
+    content_selector: "article p, .field-item p, p"
+    max_articles: 10
