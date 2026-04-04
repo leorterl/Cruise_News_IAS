@@ -167,15 +167,17 @@ sites:
   - name: "Travel and Tour World (RSS)"
     url: "https://www.travelandtourworld.com/news/article/category/cruise-news/"
     type: "rss"
-    rss_url: "https://www.travelandtourworld.com/news/article/category/cruise-news/feed/"
-    content_selector: ".details p, article p"
-
-  - name: "Travel and Tour World (HTML)"
-    url: "https://www.travelandtourworld.com/news/article/category/cruise-news/"
-    type: "stealth"
-    listing_selector: "h2 a, h3 a"
-    content_selector: "article p, .entry-content p"
+    rss_url: "http://feeds.feedburner.com/travelandtourworld/cruisenews"
+    content_selector: ".details p, article p, p"
     max_articles: 10
+
+  - name: "Travel and Tour World (HTML Experimental)"
+    url: "https://www.travelandtourworld.com/news/article/category/cruise-news/"
+    type: "playwright"
+    listing_selector: "h2 a, h3 a, article a"
+    content_selector: "article p, .entry-content p, .details p, p"
+    max_articles: 5
+    time_window_hours: 24
 
   - name: "NCLH Press Releases"
     url: "https://www.nclhltd.com/news-media/press-releases"
