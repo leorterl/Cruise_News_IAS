@@ -109,13 +109,30 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
 .story-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; display: grid; grid-template-columns: 1fr auto; gap: 20px; align-items: start; transition: border-color 0.2s, transform 0.15s; animation: fadeUp 0.3s ease both; }
 .story-card:hover { border-color: #3a4a66; transform: translateY(-1px); }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
-.story-num { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: var(--gold-dim); color: var(--gold); border-radius: 50%; font-size: 0.65rem; font-weight: 700; margin-bottom: 10px; }
+.story-num { display: inline-flex; align-items: center; gap: 6px; font-size: 0.65rem; font-weight: 700; margin-bottom: 10px; }
+.story-num-circle { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: var(--gold-dim); color: var(--gold); border-radius: 50%; font-size: 0.65rem; font-weight: 700; flex-shrink: 0; }
 .story-title { font-family: 'Syne', sans-serif; font-size: 1.05rem; font-weight: 700; line-height: 1.4; margin-bottom: 10px; cursor: pointer; transition: color 0.15s; }
 .story-title:hover { color: var(--gold); }
 .story-summary { font-size: 0.86rem; line-height: 1.7; color: #9aa5be; margin-bottom: 14px; }
 .story-sources { display: flex; flex-wrap: wrap; gap: 6px; }
 .source-chip { font-size: 0.65rem; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 3px 9px; border-radius: 20px; text-decoration: none; direction: ltr; transition: all 0.15s; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .source-chip:hover { background: var(--teal-dim); color: var(--teal); border-color: rgba(34,211,184,0.3); }
+
+/* ── Category filter & tags ── */
+.category-filter { display: flex; gap: 6px; }
+.cat-btn { padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); font-family: 'Outfit', sans-serif; font-size: 0.78rem; font-weight: 500; cursor: pointer; transition: all 0.15s; }
+.cat-btn.active { background: var(--gold-dim); color: var(--gold); border-color: var(--gold); }
+.cat-btn[data-cat="cruise"].active { background: var(--cin-dim); color: var(--cin); border-color: var(--cin); }
+.cat-btn[data-cat="ias"].active { background: var(--ias-dim); color: var(--ias); border-color: var(--ias); }
+.cat-tag { display: inline-block; font-size: 0.6rem; font-weight: 700; padding: 2px 7px; border-radius: 4px; letter-spacing: 0.5px; margin-inline-start: 6px; vertical-align: middle; }
+.cat-tag.cruise { background: var(--cin-dim); color: var(--cin); }
+.cat-tag.ias { background: var(--ias-dim); color: var(--ias); }
+.story-card.cat-hidden { display: none; }
+.site-block.cat-hidden { display: none; }
+.site-category-divider { font-size: 0.82rem; font-weight: 700; color: var(--muted); padding: 16px 0 8px; border-bottom: 1px solid var(--border); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.site-category-divider .cat-dot { width: 8px; height: 8px; border-radius: 50%; }
+.site-category-divider .cat-dot.cruise { background: var(--cin); }
+.site-category-divider .cat-dot.ias { background: var(--ias); }
 
 /* ── Write button with site selector ── */
 .write-group { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
@@ -328,6 +345,12 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
       <button class="tab-btn" id="tab-manual" onclick="switchTab('manual')">✍️ כתוב מקישור</button>
     </div>
 
+    <div class="category-filter" id="category-filter">
+      <button class="cat-btn active" data-cat="all" onclick="filterCategory('all')">הכל</button>
+      <button class="cat-btn" data-cat="cruise" onclick="filterCategory('cruise')">🚢 Cruise</button>
+      <button class="cat-btn" data-cat="ias" onclick="filterCategory('ias')">✈️ IAS</button>
+    </div>
+
     <div class="tab-panel active" id="panel-digest">
       <div id="stories-container">
         <div class="loading"><div class="spinner"></div>טוען חדשות...</div>
@@ -447,39 +470,81 @@ const DEFAULT_CIN_ENDING = `<div>
 </div>`;
 
 // ── Master site list (mirrors config.yaml order exactly) ─────────────────────
-const ALL_SITES = [
-  "Royal Caribbean Blog",
-  "Travel and Tour World (RSS)",
-  "Travel and Tour World (HTML)",
-  "NCLH Press Releases",
-  "Cruise Fever",
-  "Carnival Corp",
-  "Carnival News",
-  "The Points Guy - Cruise",
-  "MSC Press Area (INT)",
-  "MSC Press Area (US)",
-  "Holland America",
-  "Explora Journeys",
-  "Oceania Cruises",
-  "USA Today Cruises",
-  "Disney Cruise Line",
-  "Seabourn",
-  "Princess Cruises",
-  "Royal Caribbean Press Center",
-  "Silversea Press Center",
-  "Crystal Cruises",
-  "CLIA (cruising.org) News",
-  "P&O Cruises Blog",
-  "Windstar Cruises",
-  "Cruise Industry News",
-  "NCL Newsroom",
-  "Royal Caribbean Group",
-  "RSSC (Regent)",
-  "Celebrity Cruises Press Center",
-  "Breaking Travel News - Cruise",
-  "TravelPulse - Cruise",
-  "Travel Weekly - Cruise"
-];
+const SITE_CATEGORIES = {
+  // Cruise sources
+  "Royal Caribbean Blog": "cruise",
+  "Travel and Tour World (RSS)": "cruise",
+  "Travel and Tour World (HTML Experimental)": "cruise",
+  "NCLH Press Releases": "cruise",
+  "Cruise Fever": "cruise",
+  "Carnival Corp": "cruise",
+  "Carnival News": "cruise",
+  "The Points Guy - Cruise": "cruise",
+  "MSC Press Area (INT)": "cruise",
+  "MSC Press Area (US)": "cruise",
+  "Holland America": "cruise",
+  "Explora Journeys": "cruise",
+  "Oceania Cruises": "cruise",
+  "USA Today Cruises": "cruise",
+  "Disney Cruise Line": "cruise",
+  "Seabourn": "cruise",
+  "Princess Cruises": "cruise",
+  "Royal Caribbean Press Center": "cruise",
+  "Silversea Press Center": "cruise",
+  "Crystal Cruises": "cruise",
+  "CLIA (cruising.org) News": "cruise",
+  "P&O Cruises Blog": "cruise",
+  "Windstar Cruises": "cruise",
+  "Cruise Industry News": "cruise",
+  "NCL Newsroom": "cruise",
+  "Royal Caribbean Group": "cruise",
+  "RSSC (Regent)": "cruise",
+  "Celebrity Cruises Press Center": "cruise",
+  "Breaking Travel News - Cruise": "cruise",
+  "TravelPulse - Cruise": "cruise",
+  "Travel Weekly - Cruise": "cruise",
+  "Cruise Hive": "cruise",
+  "Cruise Critic News": "cruise",
+  "MedCruise": "cruise",
+  "Travel Market Report - Cruise": "cruise",
+  "Cruzely": "cruise",
+  "CruiseMapper News": "cruise",
+  // IAS sources
+  "Euronews Travel": "ias",
+  "One Mile at a Time": "ias",
+  "Simple Flying": "ias",
+  "AeroTime": "ias",
+  "Paddle Your Own Kanoo": "ias",
+  "Your Mileage May Vary": "ias",
+  "TravelAwaits": "ias",
+  "Greek Reporter Travel": "ias",
+  "Skift News": "ias",
+  "Delta News Hub": "ias",
+  "Skytrax Ratings": "ias",
+  "to70 Aviation": "ias",
+  "FlightGlobal": "ias",
+  "CN Traveler": "ias",
+  "ETC Press Centre": "ias",
+  "Aviation24": "ias",
+  "Travel Mole": "ias",
+  "Airways Mag": "ias",
+  "Business Traveller Middle East": "ias",
+  "The Points Guy Airlines": "ias",
+  "flydubai News": "ias",
+  "Air Arabia Press": "ias",
+  "Norwegian Press": "ias",
+  "EASA Press Releases": "ias",
+  "easyJet News": "ias",
+  "British Airways Media": "ias",
+  "Wizz Air News": "ias",
+  "Lufthansa Group Newsroom": "ias",
+  "Eurowings Newsroom": "ias",
+  "Star Alliance News": "ias",
+  "ACI Europe": "ias",
+  "American Airlines News": "ias",
+  "Ryanair News": "ias",
+};
+const ALL_SITES = Object.keys(SITE_CATEGORIES);
 
 // ── Storage ───────────────────────────────────────────────────────────────────
 function loadKey() { return localStorage.getItem('gemini_api_key') || ''; }
@@ -636,6 +701,27 @@ function switchTab(name) {
   document.getElementById('panel-' + name).classList.add('active');
 }
 
+let activeCategoryFilter = 'all';
+function filterCategory(cat) {
+  activeCategoryFilter = cat;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));
+  // Filter story cards
+  document.querySelectorAll('.story-card').forEach(card => {
+    const cardCat = card.dataset.category || 'cruise';
+    card.classList.toggle('cat-hidden', cat !== 'all' && cardCat !== cat);
+  });
+  // Filter source blocks
+  document.querySelectorAll('.site-block').forEach(block => {
+    const siteName = block.dataset.site;
+    const siteCat = SITE_CATEGORIES[siteName] || 'cruise';
+    block.classList.toggle('cat-hidden', cat !== 'all' && siteCat !== cat);
+  });
+  document.querySelectorAll('.site-category-divider').forEach(div => {
+    const divCat = div.dataset.category;
+    div.classList.toggle('cat-hidden', cat !== 'all' && divCat !== cat);
+  });
+}
+
 // ── Render ────────────────────────────────────────────────────────────────────
 let currentItems = [];
 let currentStories = [];
@@ -729,16 +815,38 @@ async function loadAndRender(iso, forceRefresh = false) {
 }
 
 // ── Render stories ────────────────────────────────────────────────────────────
+function getStoryCategory(story) {
+  // Check related raw items first (have category from crawler)
+  if (story.related && story.related.length) {
+    const cats = story.related.map(r => r.category || SITE_CATEGORIES[r.source] || 'cruise');
+    const iasCount = cats.filter(c => c === 'ias').length;
+    if (iasCount > cats.length / 2) return 'ias';
+    if (iasCount === 0) return 'cruise';
+  }
+  // Fallback: check source labels against SITE_CATEGORIES
+  if (story.sources && story.sources.length) {
+    const cats = story.sources.map(src => SITE_CATEGORIES[src.label] || 'cruise');
+    const iasCount = cats.filter(c => c === 'ias').length;
+    return iasCount > cats.length / 2 ? 'ias' : 'cruise';
+  }
+  return 'cruise';
+}
+
 function renderStories(stories) {
   const container = document.getElementById('stories-container');
   if (!stories.length) {
     container.innerHTML = `<div class="empty"><h3>אין חדשות להיום</h3><p>הדיגסט ייווצר אוטומטית בשעה 03:00.</p></div>`;
     return;
   }
-  container.innerHTML = `<div class="stories">${stories.map((s, i) => `
-    <div class="story-card" style="animation-delay:${i * 0.04}s">
+  // Note: all dynamic values are escaped via esc() to prevent XSS
+  container.innerHTML = `<div class="stories">${stories.map((s, i) => {
+    const cat = getStoryCategory(s);
+    const catLabel = cat === 'ias' ? 'IAS' : 'Cruise';
+    const hidden = activeCategoryFilter !== 'all' && cat !== activeCategoryFilter ? ' cat-hidden' : '';
+    return `
+    <div class="story-card${hidden}" data-category="${cat}" style="animation-delay:${i * 0.04}s">
       <div>
-        <div class="story-num">${i + 1}</div>
+        <div class="story-num"><span class="story-num-circle">${i + 1}</span><span class="cat-tag ${cat}">${catLabel}</span></div>
         <div class="story-title" onclick="openWriteModal(${i})">${esc(s.title)}</div>
         <div class="story-summary">${esc(s.summary)}</div>
         <div class="story-sources">
@@ -747,12 +855,14 @@ function renderStories(stories) {
       </div>
       <div class="write-group">
         <div class="site-selector">
-          <button class="site-btn" id="site-ias-${i}" onclick="setSite(${i},'ias')">IAS</button>
-          <button class="site-btn active-cin" id="site-cin-${i}" onclick="setSite(${i},'cin')">CruiseIn</button>
+          <button class="site-btn${cat === 'ias' ? ' active-ias' : ''}" id="site-ias-${i}" onclick="setSite(${i},'ias')">IAS</button>
+          <button class="site-btn${cat === 'cruise' ? ' active-cin' : ''}" id="site-cin-${i}" onclick="setSite(${i},'cin')">CruiseIn</button>
         </div>
         <button class="btn-write" onclick="openWriteModal(${i})">✍️ כתוב כתבה</button>
       </div>
-    </div>`).join('')}</div>`;
+    </div>`;
+  }).join('')}</div>`;
+  stories.forEach((s, i) => { cardSites[i] = getStoryCategory(s) === 'ias' ? 'ias' : 'cin'; });
 }
 
 // ── Site selector per card ────────────────────────────────────────────────────
@@ -767,12 +877,32 @@ function setSite(idx, site) {
 }
 function getCardSite(idx) { return cardSites[idx] || 'cin'; }
 
-// ── Render sites (NEW: site-by-site sources tab) ──────────────────────────────
+// ── Render sites (site-by-site sources tab, grouped by category) ─────────────
+function renderSiteBlock(siteName, articles) {
+  const hasNews = !!articles;
+  // Note: all dynamic values escaped via esc()
+  return `<div class="site-block ${hasNews ? 'has-news' : 'no-news'}" data-site="${esc(siteName)}">
+    <div class="site-block-header">
+      <span class="site-block-name">${esc(siteName)}</span>
+      ${hasNews
+        ? `<span class="site-news-count">${articles.length} כתבה${articles.length > 1 ? 'ות' : ''}</span>`
+        : `<span class="site-no-news-label">אין חדשות מהיום</span>`
+      }
+    </div>
+    ${hasNews ? `<div class="site-articles-list">
+      ${articles.map(a => `
+        <a class="site-article-link" href="${esc(a.link)}" target="_blank" rel="noopener">
+          <span class="site-article-arrow">↗</span>
+          <span class="site-article-title">${esc(a.title)}</span>
+        </a>`).join('')}
+    </div>` : ''}
+  </div>`;
+}
+
 function renderSites(items) {
   const grid = document.getElementById('sites-grid');
   const countEl = document.getElementById('sources-count');
 
-  // Group items by source
   const bySource = {};
   for (const item of items) {
     const src = item.source || 'אחר';
@@ -783,49 +913,21 @@ function renderSites(items) {
   const activeSiteCount = ALL_SITES.filter(s => bySource[s]).length;
   const unknownSources = Object.keys(bySource).filter(s => !ALL_SITES.includes(s));
   const totalActive = activeSiteCount + unknownSources.length;
-
   countEl.textContent = `${totalActive} מתוך ${ALL_SITES.length} אתרים דיווחו היום`;
 
-  let html = '';
-  // Render all known sites in config order
-  for (const siteName of ALL_SITES) {
-    const articles = bySource[siteName];
-    const hasNews = !!articles;
-    html += `<div class="site-block ${hasNews ? 'has-news' : 'no-news'}" data-site="${esc(siteName)}">
-      <div class="site-block-header">
-        <span class="site-block-name">${esc(siteName)}</span>
-        ${hasNews
-          ? `<span class="site-news-count">${articles.length} כתבה${articles.length > 1 ? 'ות' : ''}</span>`
-          : `<span class="site-no-news-label">אין חדשות מהיום</span>`
-        }
-      </div>
-      ${hasNews ? `<div class="site-articles-list">
-        ${articles.map(a => `
-          <a class="site-article-link" href="${esc(a.link)}" target="_blank" rel="noopener">
-            <span class="site-article-arrow">↗</span>
-            <span class="site-article-title">${esc(a.title)}</span>
-          </a>`).join('')}
-      </div>` : ''}
-    </div>`;
-  }
+  const cruiseSites = ALL_SITES.filter(s => SITE_CATEGORIES[s] === 'cruise');
+  const iasSites = ALL_SITES.filter(s => SITE_CATEGORIES[s] === 'ias');
+  const hideCruise = activeCategoryFilter === 'ias' ? ' cat-hidden' : '';
+  const hideIas = activeCategoryFilter === 'cruise' ? ' cat-hidden' : '';
 
-  // Any sources NOT in the known list (edge case)
-  for (const siteName of unknownSources) {
-    const articles = bySource[siteName];
-    html += `<div class="site-block has-news" data-site="${esc(siteName)}">
-      <div class="site-block-header">
-        <span class="site-block-name">${esc(siteName)}</span>
-        <span class="site-news-count">${articles.length} כתבה${articles.length > 1 ? 'ות' : ''}</span>
-      </div>
-      <div class="site-articles-list">
-        ${articles.map(a => `
-          <a class="site-article-link" href="${esc(a.link)}" target="_blank" rel="noopener">
-            <span class="site-article-arrow">↗</span>
-            <span class="site-article-title">${esc(a.title)}</span>
-          </a>`).join('')}
-      </div>
-    </div>`;
-  }
+  let html = '';
+  html += `<div class="site-category-divider${hideCruise}" data-category="cruise"><span class="cat-dot cruise"></span>🚢 Cruise — ${cruiseSites.length} מקורות</div>`;
+  for (const siteName of cruiseSites) html += renderSiteBlock(siteName, bySource[siteName]);
+
+  html += `<div class="site-category-divider${hideIas}" data-category="ias"><span class="cat-dot ias"></span>✈️ IAS — ${iasSites.length} מקורות</div>`;
+  for (const siteName of iasSites) html += renderSiteBlock(siteName, bySource[siteName]);
+
+  for (const siteName of unknownSources) html += renderSiteBlock(siteName, bySource[siteName]);
 
   grid.innerHTML = html;
 }

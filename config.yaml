@@ -7,6 +7,7 @@ settings:
 sites:
   # 1) Official sources first
   - name: "Royal Caribbean Press Center"
+    category: "cruise"
     url: "https://www.royalcaribbeanpresscenter.com/press-releases/"
     type: "stealth"
     listing_selector: ".pdf_item_title, a.pdf_item_title"
@@ -20,6 +21,7 @@ sites:
       - "/search"
 
   - name: "Celebrity Cruises Press Center"
+    category: "cruise"
     url: "https://royalcaribbeangrouppresscenter.com/celebritycruises/news"
     type: "playwright"
     listing_selector: "a[href*='/news/']"
@@ -33,6 +35,7 @@ sites:
 
   # 2) Royal Caribbean Blog bumped to #3
   - name: "Royal Caribbean Blog"
+    category: "cruise"
     url: "https://www.royalcaribbeanblog.com/"
     type: "rss"
     rss_url: "https://www.royalcaribbeanblog.com/rss.xml"
@@ -40,6 +43,7 @@ sites:
 
   # 3) Best editorial / trade mix
   - name: "Cruise Hive"
+    category: "cruise"
     url: "https://www.cruisehive.com/category/cruise-news"
     type: "rss"
     rss_url: "https://www.cruisehive.com/feed"
@@ -55,6 +59,7 @@ sites:
       - "what to pack"
 
   - name: "Cruise Critic News"
+    category: "cruise"
     url: "https://www.cruisecritic.com/news"
     type: "stealth"
     listing_selector: "a[href*='/news/']"
@@ -73,12 +78,14 @@ sites:
       - "From photos and videos to live coverage and more."
 
   - name: "Cruise Industry News"
+    category: "cruise"
     url: "https://cruiseindustrynews.com/cruise-news/"
     type: "playwright"
     listing_selector: "h2.entry-title a, h3.entry-title a, .elementor-post__title a"
     content_selector: ".elementor-widget-theme-post-content p, article p"
 
   - name: "Cruise Fever"
+    category: "cruise"
     url: "https://cruisefever.net/category/cruise-news/"
     type: "stealth"
     listing_selector: ".td-module-title a, h2.entry-title a, h3.entry-title a"
@@ -86,12 +93,14 @@ sites:
     time_window_hours: 72
 
   - name: "Travel Weekly - Cruise"
+    category: "cruise"
     url: "https://www.travelweekly.com/Cruise-Travel"
     type: "playwright"
     listing_selector: "a[href*='Cruise']"
     content_selector: ".article-body p, article p"
 
   - name: "TravelPulse - Cruise"
+    category: "cruise"
     url: "https://www.travelpulse.com/trending/cruise-trends"
     type: "playwright"
     listing_selector: "a[href*='/news/cruise/'], a[href*='/news/']"
@@ -99,6 +108,7 @@ sites:
 
   # 4) Strong supporting sources
   - name: "MedCruise"
+    category: "cruise"
     url: "https://www.medcruise.com/news"
     type: "stealth"
     listing_selector: "a[href*='/news/']"
@@ -114,6 +124,7 @@ sites:
       - "/search"
 
   - name: "Travel Market Report - Cruise"
+    category: "cruise"
     url: "https://www.travelmarketreport.com/cruise"
     type: "stealth"
     listing_selector: "a[href*='/cruises/articles/'], a[href*='/news/articles/']"
@@ -129,24 +140,28 @@ sites:
       - "/author/"
 
   - name: "USA Today Cruises"
+    category: "cruise"
     url: "https://www.usatoday.com/travel/cruises/"
     type: "stealth"
     listing_selector: "a[href*='/story/travel/cruise'], a[href*='/story/travel/cruises/']"
     content_selector: ".gnt_ar_b p, article p"
 
   - name: "The Points Guy - Cruise"
+    category: "cruise"
     url: "https://thepointsguy.com/cruise/"
     type: "stealth"
     listing_selector: "a[href*='/cruise/']"
     content_selector: ".articleBody p, .entry-content p"
 
   - name: "Breaking Travel News - Cruise"
+    category: "cruise"
     url: "https://www.breakingtravelnews.com/news/category/cruise/"
     type: "playwright"
     listing_selector: "article h4 a"
     content_selector: "article p, .entry-content p"
 
   - name: "Cruzely"
+    category: "cruise"
     url: "https://www.cruzely.com/"
     type: "html"
     listing_selector: "a[href*='/']"
@@ -165,6 +180,7 @@ sites:
 
   # 5) Existing RSS / HTML sources from current config
   - name: "Travel and Tour World (RSS)"
+    category: "cruise"
     url: "https://www.travelandtourworld.com/news/article/category/cruise-news/"
     type: "rss"
     rss_url: "http://feeds.feedburner.com/travelandtourworld/cruisenews"
@@ -172,6 +188,7 @@ sites:
     max_articles: 10
 
   - name: "Travel and Tour World (HTML Experimental)"
+    category: "cruise"
     url: "https://www.travelandtourworld.com/news/article/category/cruise-news/"
     type: "playwright"
     listing_selector: "h2 a, h3 a, article a"
@@ -180,24 +197,28 @@ sites:
     time_window_hours: 24
 
   - name: "NCLH Press Releases"
+    category: "cruise"
     url: "https://www.nclhltd.com/news-media/press-releases"
     type: "stealth"
     listing_selector: ".media-heading a"
     content_selector: "article p, .press-release-body p"
 
   - name: "Carnival Corp"
+    category: "cruise"
     url: "https://www.carnivalcorp.com/media-center/news-releases/"
     type: "playwright"
     listing_selector: "article a, h2 a, h3 a, .news-title a"
     content_selector: "article p, .press-release p, .entry-content p"
 
   - name: "Carnival News"
+    category: "cruise"
     url: "https://www.carnival-news.com/news"
     type: "stealth"
     listing_selector: "article a, .news-card a"
     content_selector: ".entry-content p, article p"
 
   - name: "MSC Press Area (INT)"
+    category: "cruise"
     url: "https://www.mscpressarea.com/en_INT/"
     type: "stealth"
     listing_selector: "a[href*='/press-releases/']"
@@ -205,6 +226,7 @@ sites:
     url_prefix: "https://www.mscpressarea.com/en_INT"
 
   - name: "MSC Press Area (US)"
+    category: "cruise"
     url: "https://www.mscpressarea.com/en_US/press-releases/"
     type: "stealth"
     listing_selector: "a[href*='/press-releases/']"
@@ -212,6 +234,7 @@ sites:
     url_prefix: "https://www.mscpressarea.com/en_US"
 
   - name: "Holland America"
+    category: "cruise"
     url: "https://www.hollandamerica.com/en/newsroom"
     type: "stealth"
     listing_selector: "a[href*='newsroom/newsfeed/']"
@@ -219,12 +242,14 @@ sites:
     content_selector: ".cmp-text p"
 
   - name: "Explora Journeys"
+    category: "cruise"
     url: "https://explorajourneys.com/int/en/press-and-media/press"
     type: "stealth"
     listing_selector: "a[href*='/press-and-media/press/']"
     content_selector: ".cmp-text p"
 
   - name: "Oceania Cruises"
+    category: "cruise"
     url: "https://www.oceaniacruises.com/news/"
     type: "stealth"
     listing_selector: ".c33_aside a, .news-item a"
@@ -232,66 +257,77 @@ sites:
     content_selector: "article p"
 
   - name: "Disney Cruise Line"
+    category: "cruise"
     url: "https://disneyexperiences.com/dcl-press/release/"
     type: "stealth"
     listing_selector: ".press-release-list a, .entry-title a, div.col-md-4 > a"
     content_selector: ".entry-content p, article p, p"
 
   - name: "Seabourn"
+    category: "cruise"
     url: "https://www.seabourn.com/en/news/press-release"
     type: "stealth"
     listing_selector: ".press-release-item a, a[href*='press-releases/']"
     content_selector: ".press-release-content p, .cmp-text p"
 
   - name: "Princess Cruises"
+    category: "cruise"
     url: "https://www.princess.com/en-int/news/news-releases"
     type: "stealth"
     listing_selector: "a.news-release-link, .news-item a, a[href*='/news/news-releases/']"
     content_selector: ".news-release-body p, .content p"
 
   - name: "Silversea Press Center"
+    category: "cruise"
     url: "https://royalcaribbeangrouppresscenter.com/silversea/"
     type: "stealth"
     listing_selector: "a[href*='/news/']"
     content_selector: ".press-release-body p, article p"
 
   - name: "Crystal Cruises"
+    category: "cruise"
     url: "https://www.crystalcruises.com/press"
     type: "stealth"
     listing_selector: "a[href*='/press/']"
     content_selector: "p"
 
   - name: "CLIA (cruising.org) News"
+    category: "cruise"
     url: "https://cruising.org/news"
     type: "stealth"
     listing_selector: "article h3 a, article h4 a, .views-row a[href*='/news/']"
     content_selector: "article p, .content p, p"
 
   - name: "P&O Cruises Blog"
+    category: "cruise"
     url: "https://www.pocruises.com/blog"
     type: "stealth"
     listing_selector: "a[href*='/blog/'], .blog-post-card a"
     content_selector: "article p, .content p, p"
 
   - name: "Windstar Cruises"
+    category: "cruise"
     url: "https://www.windstarcruises.com/blog/"
     type: "stealth"
     listing_selector: "h4 a"
     content_selector: "article p, .entry-content p"
 
   - name: "NCL Newsroom"
+    category: "cruise"
     url: "https://www.ncl.com/newsroom/en-us/"
     type: "playwright"
     listing_selector: ".pp_blockheadlines_item_container a"
     content_selector: "article p, .pp_release_body p"
 
   - name: "Royal Caribbean Group"
+    category: "cruise"
     url: "https://www.royalcaribbeangroup.com/"
     type: "playwright"
     listing_selector: "a[href*='/news/']"
     content_selector: "article p, .post-content p, p"
 
   - name: "RSSC (Regent)"
+    category: "cruise"
     url: "https://www.rssc.com/news/2026#tabs"
     type: "playwright"
     listing_selector: "a[href*='/news/details']"
@@ -299,8 +335,297 @@ sites:
 
   # 6) Re-enabled for testing
   - name: "CruiseMapper News"
+    category: "cruise"
     url: "https://www.cruisemapper.com/news"
     type: "rss"
     rss_url: "https://www.cruisemapper.com/rss"
     content_selector: "article p, .field-item p, p"
+    max_articles: 10
+
+  # ═══════════════════════════════════════════════════════════════════════════════
+  # IAS — Aviation & Airline News Sources
+  # ═══════════════════════════════════════════════════════════════════════════════
+
+  # ── IAS 1) Aviation News & Blogs (RSS — verified) ──────────────────────────
+
+  - name: "Euronews Travel"
+    category: "ias"
+    url: "https://www.euronews.com/travel/travel-news"
+    type: "rss"
+    rss_url: "https://www.euronews.com/rss?level=theme&name=travel-news"
+    content_selector: ".c-article-content p, article p, p"
+    max_articles: 10
+
+  - name: "One Mile at a Time"
+    category: "ias"
+    url: "https://onemileatatime.com/news/"
+    type: "rss"
+    rss_url: "https://onemileatatime.com/feed/"
+    content_selector: ".entry-content p, article p"
+    max_articles: 10
+
+  - name: "Simple Flying"
+    category: "ias"
+    url: "https://simpleflying.com/category/aviation-news/"
+    type: "rss"
+    rss_url: "https://simpleflying.com/feed/category/aviation-news/"
+    content_selector: ".article-body p, .entry-content p, article p"
+    max_articles: 10
+
+  - name: "AeroTime"
+    category: "ias"
+    url: "https://www.aerotime.aero/"
+    type: "rss"
+    rss_url: "https://www.aerotime.aero/feed"
+    content_selector: ".entry-content p, article p, .post-content p"
+    max_articles: 10
+
+  - name: "Paddle Your Own Kanoo"
+    category: "ias"
+    url: "https://www.paddleyourownkanoo.com/category/airline-news/"
+    type: "rss"
+    rss_url: "https://www.paddleyourownkanoo.com/feed/"
+    content_selector: ".entry-content p, article p"
+    max_articles: 10
+
+  - name: "Your Mileage May Vary"
+    category: "ias"
+    url: "https://yourmileagemayvary.com/"
+    type: "rss"
+    rss_url: "https://yourmileagemayvary.com/feed/"
+    content_selector: ".entry-content p, article p"
+    max_articles: 10
+
+  - name: "TravelAwaits"
+    category: "ias"
+    url: "https://www.travelawaits.com/category/news-and-tips/travel-news/"
+    type: "rss"
+    rss_url: "https://www.travelawaits.com/feed/"
+    content_selector: ".entry-content p, article p"
+    max_articles: 10
+
+  - name: "Greek Reporter Travel"
+    category: "ias"
+    url: "https://greekreporter.com/travel/"
+    type: "rss"
+    rss_url: "https://greekreporter.com/feed/"
+    content_selector: ".entry-content p, article p"
+    max_articles: 10
+
+  - name: "Skift News"
+    category: "ias"
+    url: "https://skift.com/news/"
+    type: "rss"
+    rss_url: "https://skift.com/feed/"
+    content_selector: "article p, .entry-content p, p"
+    max_articles: 10
+
+  - name: "Delta News Hub"
+    category: "ias"
+    url: "https://news.delta.com/"
+    type: "rss"
+    rss_url: "https://news.delta.com/rss.xml"
+    content_selector: "article p, .field-item p, .body p, p"
+    max_articles: 10
+
+  - name: "Skytrax Ratings"
+    category: "ias"
+    url: "https://skytraxratings.com/"
+    type: "rss"
+    rss_url: "https://skytraxratings.com/feed"
+    content_selector: ".entry-content p, article p, p"
+    max_articles: 10
+    time_window_hours: 168
+
+  - name: "to70 Aviation"
+    category: "ias"
+    url: "https://to70.com/"
+    type: "rss"
+    rss_url: "https://to70.com/feed/"
+    content_selector: ".entry-content p, article p, p"
+    max_articles: 10
+    time_window_hours: 168
+
+  - name: "FlightGlobal"
+    category: "ias"
+    url: "https://www.flightglobal.com/"
+    type: "rss"
+    rss_url: "https://www.flightglobal.com/feed"
+    content_selector: "article p, .entry-content p, p"
+    max_articles: 10
+
+  - name: "CN Traveler"
+    category: "ias"
+    url: "https://www.cntraveler.com/"
+    type: "rss"
+    rss_url: "https://www.cntraveler.com/feed/rss"
+    content_selector: "article p, .body-text p, p"
+    max_articles: 10
+
+  - name: "ETC Press Centre"
+    category: "ias"
+    url: "https://etc-corporate.org/press-centre/"
+    type: "rss"
+    rss_url: "https://etc-corporate.org/feed/"
+    content_selector: ".entry-content p, article p, p"
+    max_articles: 10
+    time_window_hours: 168
+
+  # ── IAS 2) Aviation News & Blogs (Stealth — verified) ──────────────────────
+
+  - name: "Aviation24"
+    category: "ias"
+    url: "https://www.aviation24.be/latest-news/"
+    type: "stealth"
+    listing_selector: "h2 a, h3.entry-title a, .entry-title a"
+    content_selector: ".entry-content p, article p"
+    max_articles: 10
+
+  - name: "Travel Mole"
+    category: "ias"
+    url: "https://www.travelmole.com/travel-news/"
+    type: "stealth"
+    listing_selector: "h2.ibS_expttitle a[href*='/news/']"
+    content_selector: "article p, .entry-content p, p"
+    max_articles: 10
+
+  - name: "Airways Mag"
+    category: "ias"
+    url: "https://www.airwaysmag.com/"
+    type: "stealth"
+    listing_selector: "a[href*='/new-post/']"
+    content_selector: "article p, .post-content p, p"
+    max_articles: 10
+
+  - name: "Business Traveller Middle East"
+    category: "ias"
+    url: "https://www.businesstraveller.com/middle-east/"
+    type: "stealth"
+    listing_selector: "h2 a, h3 a"
+    content_selector: "article p, .entry-content p, p"
+    max_articles: 10
+
+  - name: "The Points Guy Airlines"
+    category: "ias"
+    url: "https://thepointsguy.com/news/airlines/"
+    type: "stealth"
+    listing_selector: "a[href*='/news/']"
+    content_selector: ".articleBody p, .entry-content p, article p"
+    max_articles: 10
+
+  # ── IAS 3) Airline Press Rooms (Stealth — verified) ────────────────────────
+
+  - name: "flydubai News"
+    category: "ias"
+    url: "https://news.flydubai.com/"
+    type: "stealth"
+    listing_selector: "a.story-card__link, a.latest-story-card__link"
+    content_selector: "article p, .content p, .story-body p, p"
+    max_articles: 10
+    time_window_hours: 168
+
+  - name: "Air Arabia Press"
+    category: "ias"
+    url: "https://press.airarabia.com/"
+    type: "stealth"
+    listing_selector: "div.pp-block-item a[href*='press.airarabia.com/']"
+    content_selector: ".pp_release_body p, article p, p"
+    max_articles: 10
+    time_window_hours: 168
+
+  - name: "Norwegian Press"
+    category: "ias"
+    url: "https://media.uk.norwegian.com/pressreleases"
+    type: "stealth"
+    listing_selector: "a[href*='/pressreleases/']"
+    content_selector: ".pp_release_body p, article p, p"
+    max_articles: 10
+    time_window_hours: 168
+
+  - name: "EASA Press Releases"
+    category: "ias"
+    url: "https://www.easa.europa.eu/en/newsroom-and-events/press-releases"
+    type: "stealth"
+    listing_selector: "a[href*='/press-releases/']"
+    content_selector: "article p, .field-item p, p"
+    max_articles: 10
+    time_window_hours: 168
+
+  # ── IAS 4) Airline Press Rooms (Playwright — verified) ─────────────────────
+
+  - name: "easyJet News"
+    category: "ias"
+    url: "https://www.easyjet.com/en/news/"
+    type: "playwright"
+    listing_selector: "a[href*='/news/story/']"
+    content_selector: "article p, .content p, p"
+    max_articles: 10
+    time_window_hours: 720
+
+  - name: "British Airways Media"
+    category: "ias"
+    url: "https://mediacentre.britishairways.com/?articleType=Latestnews"
+    type: "playwright"
+    listing_selector: "a[href*='/news/']"
+    content_selector: "article p, .content p, .pp_release_body p, p"
+    max_articles: 10
+    time_window_hours: 720
+
+  - name: "Wizz Air News"
+    category: "ias"
+    url: "https://www.wizzair.com/en-gb/information-and-services/about-us/news"
+    type: "playwright"
+    listing_selector: "a[href*='/about-us/news/']"
+    content_selector: "article p, .content p, p"
+    max_articles: 10
+
+  - name: "Lufthansa Group Newsroom"
+    category: "ias"
+    url: "https://newsroom.lufthansagroup.com/en"
+    type: "playwright"
+    listing_selector: "a[href*='lufthansagroup.com/en/']"
+    content_selector: "article p, .content p, p"
+    max_articles: 10
+
+  - name: "Eurowings Newsroom"
+    category: "ias"
+    url: "https://newscloud.eurowings.com/en/"
+    type: "playwright"
+    listing_selector: "a[href*='newscloud.eurowings.com/en/']"
+    content_selector: "article p, .content p, p"
+    max_articles: 10
+    time_window_hours: 720
+
+  - name: "Star Alliance News"
+    category: "ias"
+    url: "https://www.staralliance.com/en/news"
+    type: "playwright"
+    listing_selector: "a[href*='newsArticleId']"
+    content_selector: "article p, .content p, p"
+    max_articles: 10
+    time_window_hours: 720
+
+  - name: "ACI Europe"
+    category: "ias"
+    url: "https://www.aci-europe.org/"
+    type: "playwright"
+    listing_selector: "a[href*='/press-release/']"
+    content_selector: "article p, .content p, p"
+    max_articles: 10
+
+  - name: "American Airlines News"
+    category: "ias"
+    url: "https://news.aa.com/"
+    type: "playwright"
+    listing_selector: "a[href*='news-details']"
+    content_selector: "article p, .body p, .module_body p, p"
+    max_articles: 10
+
+  # ── IAS 5) WordPress API (Ryanair) ─────────────────────────────────────────
+
+  - name: "Ryanair News"
+    category: "ias"
+    url: "https://corporate.ryanair.com/news/"
+    type: "wp_api"
+    wp_api_url: "https://corporate.ryanair.com/wp-json/wp/v2/posts?categories=122&per_page=10"
     max_articles: 10

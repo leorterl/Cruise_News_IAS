@@ -105,6 +105,7 @@ class Article:
     content: str
     source: str
     published_date: datetime | None = None
+    category: str = "cruise"
 
 
 def collect(seen_links: set) -> list[dict]:
@@ -118,6 +119,7 @@ def collect(seen_links: set) -> list[dict]:
                 "link": a.url,
                 "snippet": a.content[:300] if a.content else "",
                 "source": a.source,
+                "category": a.category,
             }
         )
     logger.info("[crawler] Collected %s new items.", len(results))
@@ -183,6 +185,8 @@ def _scrape_all(config: dict, seen_links: set) -> list[Article]:
                 articles = _scrape_rss(site, headers, timeout, site_cutoff, seen_links)
             elif site_type == "stealth":
                 articles = _scrape_stealth(site, timeout, site_cutoff, seen_links)
+            elif site_type == "wp_api":
+                articles = _scrape_wp_api(site, timeout, site_cutoff, seen_links)
             else:
                 articles = _scrape_html(site, headers, timeout, site_cutoff, seen_links)
             all_articles.extend(articles)
@@ -226,7 +230,39 @@ def _scrape_rss(site, headers, timeout, cutoff, seen_links) -> list[Article]:
         if _should_reject_article(site, title, url, content, published, cutoff):
             continue
 
-        articles.append(Article(title=title, url=url, content=content, source=site["name"], published_date=published))
+        articles.append(Article(title=title, url=url, content=content, source=site["name"], published_date=published, category=site.get("category", "cruise")))
+        if len(articles) >= max_per_site:
+            break
+    return articles
+
+
+def _scrape_wp_api(site, timeout, cutoff, seen_links) -> list[Article]:
+    try:
+        from curl_cffi import requests as cffi
+    except ImportError:
+        logger.warning("[%s] curl_cffi not installed — skipping wp_api site", site["name"])
+        return []
+
+    api_url = site["wp_api_url"]
+    max_per_site = site.get("max_articles", 10)
+    resp = cffi.get(api_url, impersonate="chrome", timeout=timeout)
+    resp.raise_for_status()
+    posts = resp.json()
+
+    articles = []
+    for post in posts:
+        url = post.get("link", "").strip()
+        title = BeautifulSoup(post.get("title", {}).get("rendered", ""), "html.parser").get_text(strip=True)
+        if not url or not title or url in seen_links:
+            continue
+        pub_str = post.get("date_gmt", post.get("date", ""))
+        pub_date = _try_parse_iso(pub_str)
+        if pub_date and pub_date < cutoff:
+            continue
+        content = BeautifulSoup(post.get("content", {}).get("rendered", ""), "html.parser").get_text(" ", strip=True)
+        if _should_reject_article(site, title, url, content, pub_date, cutoff):
+            continue
+        articles.append(Article(title=title, url=url, content=content, source=site["name"], published_date=pub_date, category=site.get("category", "cruise")))
         if len(articles) >= max_per_site:
             break
     return articles
@@ -300,7 +336,7 @@ def _scrape_from_listing_soup(site, soup, headers, timeout, cutoff, seen_links, 
         if _should_reject_article(site, title, url, content, pub_date, cutoff):
             continue
 
-        articles.append(Article(title=title, url=url, content=content, source=site["name"], published_date=pub_date))
+        articles.append(Article(title=title, url=url, content=content, source=site["name"], published_date=pub_date, category=site.get("category", "cruise")))
         if len(articles) >= max_per_site:
             break
     return articles
@@ -399,7 +435,7 @@ def _scrape_playwright_batch(sites, cutoff, seen_links) -> list[Article]:
                 if _should_reject_article(site, title, href, content, pub_date, site_cutoff):
                     continue
 
-                articles.append(Article(title=title, url=href, content=content, source=name, published_date=pub_date))
+                articles.append(Article(title=title, url=href, content=content, source=name, published_date=pub_date, category=site.get("category", "cruise")))
                 site_count += 1
                 if site_count >= max_per_site:
                     break

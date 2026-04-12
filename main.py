@@ -41,28 +41,41 @@ def mark_seen(seen: dict, new_items: list) -> dict:
 
 
 def save_digest(raw_items: list, ai_summary: str):
-    """Save digest as both digests/digest.json (latest) and digests/digest-YYYY-MM-DD.json (history)."""
+    """Save digest as both digests/digest.json (latest) and digests/digest-YYYY-MM-DD.json (history).
+    Merges with existing items from today to avoid losing earlier runs."""
     DIGEST_DIR.mkdir(exist_ok=True)
     today = str(date.today())
+
+    existing_items = []
+    if DIGEST_FILE.exists():
+        try:
+            with open(DIGEST_FILE, encoding="utf-8") as f:
+                existing = json.load(f)
+            if existing.get("date") == today:
+                existing_items = existing.get("items", [])
+        except (json.JSONDecodeError, KeyError):
+            pass
+
+    seen_links = {item["link"] for item in raw_items}
+    merged_items = raw_items + [item for item in existing_items if item["link"] not in seen_links]
 
     digest = {
         "date": today,
         "generated_at": datetime.now(timezone.utc).isoformat(),
         "summary": ai_summary,
-        "items": raw_items
+        "items": merged_items
     }
-    
+
     payload = json.dumps(digest, ensure_ascii=False, indent=2)
 
     with open(DIGEST_FILE, "w", encoding="utf-8") as f:
         f.write(payload)
 
     dated_file = DIGEST_DIR / f"digest-{today}.json"
-    if not dated_file.exists():
-        with open(dated_file, "w", encoding="utf-8") as f:
-            f.write(payload)
+    with open(dated_file, "w", encoding="utf-8") as f:
+        f.write(payload)
 
-    print(f"[main] Saved {DIGEST_FILE} and {dated_file} ({len(raw_items)} items).")
+    print(f"[main] Saved {DIGEST_FILE} and {dated_file} ({len(merged_items)} items, {len(raw_items)} new).")
 
 
 # ── Main ───────────────────────────────────────────────────────────────────────
