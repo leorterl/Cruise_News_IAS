@@ -13,6 +13,7 @@ permissions:
 jobs:
   digest:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       DASHBOARD_URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}
