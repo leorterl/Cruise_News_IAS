@@ -346,8 +346,7 @@ body { font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--te
     </div>
 
     <div class="category-filter" id="category-filter">
-      <button class="cat-btn active" data-cat="all" onclick="filterCategory('all')">הכל</button>
-      <button class="cat-btn" data-cat="cruise" onclick="filterCategory('cruise')">🚢 Cruise</button>
+      <button class="cat-btn active" data-cat="cruise" onclick="filterCategory('cruise')">🚢 Cruise</button>
       <button class="cat-btn" data-cat="ias" onclick="filterCategory('ias')">✈️ IAS</button>
     </div>
 
@@ -701,7 +700,7 @@ function switchTab(name) {
   document.getElementById('panel-' + name).classList.add('active');
 }
 
-let activeCategoryFilter = 'all';
+let activeCategoryFilter = 'cruise';
 function filterCategory(cat) {
   activeCategoryFilter = cat;
   document.querySelectorAll('.cat-btn').forEach(b => b.classList.toggle('active', b.dataset.cat === cat));

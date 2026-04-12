@@ -154,6 +154,8 @@ def _fallback_sites() -> list[dict]:
 
 
 def _scrape_all(config: dict, seen_links: set) -> list[Article]:
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
     settings = config.get("settings", {})
     timeout = settings.get("request_timeout", 15)
     user_agent = settings.get(
@@ -166,20 +168,22 @@ def _scrape_all(config: dict, seen_links: set) -> list[Article]:
 
     all_articles: list[Article] = []
     playwright_sites: list[dict] = []
+    fetch_jobs: list[dict] = []
 
     for site in config.get("sites", []):
         if site.get("enabled") is False:
             continue
+        site_type = site.get("type", "html")
+        if site_type == "playwright":
+            playwright_sites.append(site)
+        else:
+            fetch_jobs.append(site)
 
+    def _scrape_site(site):
         site_type = site.get("type", "html")
         name = site.get("name", site.get("url", "unknown"))
         site_window = site.get("time_window_hours")
         site_cutoff = datetime.now(timezone.utc) - timedelta(hours=site_window) if site_window else cutoff
-
-        if site_type == "playwright":
-            playwright_sites.append(site)
-            continue
-
         try:
             if site_type == "rss":
                 articles = _scrape_rss(site, headers, timeout, site_cutoff, seen_links)
@@ -189,10 +193,17 @@ def _scrape_all(config: dict, seen_links: set) -> list[Article]:
                 articles = _scrape_wp_api(site, timeout, site_cutoff, seen_links)
             else:
                 articles = _scrape_html(site, headers, timeout, site_cutoff, seen_links)
-            all_articles.extend(articles)
             logger.info("[%s] %s articles", name, len(articles))
+            return articles
         except Exception as e:
             logger.error("[%s] failed: %s", name, e)
+            return []
+
+    max_workers = settings.get("max_workers", 8)
+    with ThreadPoolExecutor(max_workers=max_workers) as pool:
+        futures = {pool.submit(_scrape_site, site): site for site in fetch_jobs}
+        for future in as_completed(futures):
+            all_articles.extend(future.result())
 
     if playwright_sites:
         try:
@@ -221,10 +232,15 @@ def _scrape_rss(site, headers, timeout, cutoff, seen_links) -> list[Article]:
         if _should_skip_url(url, site) or _should_skip_title(title, site):
             continue
 
-        content, pub_from_page = _fetch_article_content(url, site, headers, timeout, cutoff)
-        published = published or pub_from_page
-        if not content:
-            content = _extract_feed_content(entry)
+        content = _extract_feed_content(entry)
+        if not content or len(content) < 200:
+            try:
+                content_page, pub_from_page = _fetch_article_content(url, site, headers, timeout, cutoff)
+                if content_page:
+                    content = content_page
+                published = published or pub_from_page
+            except Exception:
+                pass
         if not content:
             continue
         if _should_reject_article(site, title, url, content, published, cutoff):
@@ -343,49 +359,47 @@ def _scrape_from_listing_soup(site, soup, headers, timeout, cutoff, seen_links, 
 
 
 def _scrape_playwright_batch(sites, cutoff, seen_links) -> list[Article]:
+    import asyncio
+
     try:
-        from patchright.sync_api import sync_playwright
+        from patchright.async_api import async_playwright
     except ImportError:
         logger.warning("patchright not installed — skipping Playwright sites")
         return []
 
-    articles: list[Article] = []
-    with sync_playwright() as p:
-        browser = p.chromium.launch(
-            headless=True,
-            args=[
-                "--disable-blink-features=AutomationControlled",
-                "--no-first-run",
-                "--no-default-browser-check",
-            ],
-        )
-        context = browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-            viewport={"width": 1920, "height": 1080},
-            locale="en-US",
-        )
-        context.add_init_script(
-            """
-            Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
-            Object.defineProperty(navigator, 'languages', {get: () => ['en-US', 'en']});
-            window.chrome = {runtime: {}};
-            """
-        )
-        page = context.new_page()
+    active_sites = [s for s in sites if s.get("enabled") is not False]
+    if not active_sites:
+        return []
 
-        for site in sites:
-            if site.get("enabled") is False:
-                continue
+    async def _scrape_pw_site(site, browser, semaphore):
+        async with semaphore:
             name = site.get("name", "unknown")
             max_per_site = site.get("max_articles", 5)
             site_window = site.get("time_window_hours")
             site_cutoff = datetime.now(timezone.utc) - timedelta(hours=site_window) if site_window else cutoff
+            articles = []
+
+            ctx = await browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+                viewport={"width": 1920, "height": 1080},
+                locale="en-US",
+            )
+            await ctx.add_init_script(
+                """
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+                Object.defineProperty(navigator, 'languages', {get: () => ['en-US', 'en']});
+                window.chrome = {runtime: {}};
+                """
+            )
+            await ctx.route("**/*.{png,jpg,jpeg,gif,svg,webp,ico,woff,woff2,ttf,eot,mp4,webm}", lambda route: route.abort())
+            await ctx.route("**/{analytics,tracking,ads,pixel,beacon}**", lambda route: route.abort())
+            page = await ctx.new_page()
 
             try:
-                page.goto(site["url"], timeout=45000, wait_until="domcontentloaded")
-                page.wait_for_timeout(site.get("listing_wait_ms", 5000))
+                await page.goto(site["url"], timeout=30000, wait_until="domcontentloaded")
+                await page.wait_for_timeout(site.get("listing_wait_ms", 3000))
                 listing_selector = site.get("listing_selector", "article a")
-                links = page.eval_on_selector_all(
+                links = await page.eval_on_selector_all(
                     listing_selector,
                     """els => els.map(el => {
                         let text = (el.textContent || '').trim();
@@ -401,7 +415,8 @@ def _scrape_playwright_batch(sites, cutoff, seen_links) -> list[Article]:
                 )
             except Exception as e:
                 logger.error("[%s] playwright failed on listing: %s", name, e)
-                continue
+                await ctx.close()
+                return []
 
             seen_urls: set[str] = set()
             site_count = 0
@@ -419,15 +434,16 @@ def _scrape_playwright_batch(sites, cutoff, seen_links) -> list[Article]:
                     continue
 
                 try:
-                    page.goto(href, timeout=30000, wait_until="domcontentloaded")
-                    page.wait_for_timeout(site.get("article_wait_ms", 2500))
-                    art_soup = BeautifulSoup(page.content(), "html.parser")
+                    await page.goto(href, timeout=20000, wait_until="domcontentloaded")
+                    await page.wait_for_timeout(site.get("article_wait_ms", 1500))
+                    html = await page.content()
+                    art_soup = BeautifulSoup(html, "html.parser")
                     pub_date = title_date or _extract_pub_date(art_soup, href)
                     content_sel = site.get("content_selector", "article p")
-                    paragraphs = page.eval_on_selector_all(
+                    paragraphs = await page.eval_on_selector_all(
                         content_sel, "els => els.map(el => (el.textContent || '').trim())"
                     )
-                    content = " ".join(p for p in paragraphs if p)
+                    content = " ".join(p2 for p2 in paragraphs if p2)
                 except Exception as e:
                     logger.warning("[%s] failed to fetch %s: %s", name, href, e)
                     continue
@@ -441,9 +457,32 @@ def _scrape_playwright_batch(sites, cutoff, seen_links) -> list[Article]:
                     break
 
             logger.info("[%s] %s articles", name, site_count)
+            await ctx.close()
+            return articles
 
-        browser.close()
-    return articles
+    async def _run_all():
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(
+                headless=True,
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--no-first-run",
+                    "--no-default-browser-check",
+                ],
+            )
+            semaphore = asyncio.Semaphore(4)
+            tasks = [_scrape_pw_site(site, browser, semaphore) for site in active_sites]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            await browser.close()
+        all_articles = []
+        for r in results:
+            if isinstance(r, list):
+                all_articles.extend(r)
+            elif isinstance(r, Exception):
+                logger.error("[Playwright] task failed: %s", r)
+        return all_articles
+
+    return asyncio.run(_run_all())
 
 
 def _extract_link_and_title(el) -> tuple[str, str]:
