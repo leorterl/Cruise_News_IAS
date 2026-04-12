@@ -885,7 +885,7 @@ function renderSiteBlock(siteName, articles) {
     <div class="site-block-header">
       <span class="site-block-name">${esc(siteName)}</span>
       ${hasNews
-        ? `<span class="site-news-count">${articles.length} כתבה${articles.length > 1 ? 'ות' : ''}</span>`
+        ? `<span class="site-news-count">${articles.length} ${articles.length > 1 ? 'כתבות' : 'כתבה'}</span>`
         : `<span class="site-no-news-label">אין חדשות מהיום</span>`
       }
     </div>
