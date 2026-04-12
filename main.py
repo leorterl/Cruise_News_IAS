@@ -47,22 +47,30 @@ def save_digest(raw_items: list, ai_summary: str):
     today = str(date.today())
 
     existing_items = []
+    existing_summary = ""
     if DIGEST_FILE.exists():
         try:
             with open(DIGEST_FILE, encoding="utf-8") as f:
                 existing = json.load(f)
             if existing.get("date") == today:
                 existing_items = existing.get("items", [])
+                existing_summary = existing.get("summary", "")
         except (json.JSONDecodeError, KeyError):
             pass
 
     seen_links = {item["link"] for item in raw_items}
     merged_items = raw_items + [item for item in existing_items if item["link"] not in seen_links]
 
+    # Append new summary to existing one instead of replacing
+    if existing_summary and existing_summary != "לא נמצאו חדשות חדשות היום.":
+        merged_summary = existing_summary.rstrip().rstrip("🚢").rstrip() + "\n\n---\n\n" + ai_summary
+    else:
+        merged_summary = ai_summary
+
     digest = {
         "date": today,
         "generated_at": datetime.now(timezone.utc).isoformat(),
-        "summary": ai_summary,
+        "summary": merged_summary,
         "items": merged_items
     }
 
