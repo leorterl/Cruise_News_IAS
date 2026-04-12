@@ -673,6 +673,7 @@ function parseStories(summaryText, rawItems) {
   return blocks.map((block, i) => {
     const lines = block.trim().split('\n').filter(l => l.trim());
     const title = lines[0].replace('🚢', '').replace(/\*/g, '').trim();
+    if (!title) return null;
     const summaryLines = [], sourceLines = [];
     let inSources = false;
     for (let j = 1; j < lines.length; j++) {
@@ -689,7 +690,7 @@ function parseStories(summaryText, rawItems) {
     const related = rawItems.filter(item => sources.some(s => s.url === item.link));
     if (!related.length) related.push(...rawItems.slice(i * 2, i * 2 + 2));
     return { title, summary: summaryLines.join('\n').trim(), sources, related };
-  });
+  }).filter(Boolean);
 }
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
@@ -845,7 +846,7 @@ function renderStories(stories) {
     return `
     <div class="story-card${hidden}" data-category="${cat}" style="animation-delay:${i * 0.04}s">
       <div>
-        <div class="story-num"><span class="story-num-circle">${i + 1}</span><span class="cat-tag ${cat}">${catLabel}</span></div>
+        <div class="story-num"><span class="cat-tag ${cat}">${catLabel}</span></div>
         <div class="story-title" onclick="openWriteModal(${i})">${esc(s.title)}</div>
         <div class="story-summary">${esc(s.summary)}</div>
         <div class="story-sources">

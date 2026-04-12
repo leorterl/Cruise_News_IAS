@@ -97,10 +97,21 @@ if __name__ == "__main__":
     if not new_items:
         print("[main] No new items found.")
         save_digest([], "לא נמצאו חדשות חדשות היום.")
-        send_message("בוקר טוב עוזי 🌅\nלא נמצאו חדשות חדשות היום בעולם הקרוזים.")
+        send_message("בוקר טוב עוזי 🌅\nלא נמצאו חדשות חדשות היום.")
     else:
-        print(f"[main] Sending {len(new_items[:25])} items to AI...")
-        digest_text = summarize(new_items[:25])
+        cruise_items = [i for i in new_items if i.get("category") == "cruise"]
+        ias_items = [i for i in new_items if i.get("category") == "ias"]
+        print(f"[main] Found {len(cruise_items)} cruise + {len(ias_items)} IAS items.")
+
+        summaries = []
+        if cruise_items:
+            print(f"[main] Summarizing {len(cruise_items[:25])} cruise items...")
+            summaries.append(summarize(cruise_items[:25]))
+        if ias_items:
+            print(f"[main] Summarizing {len(ias_items[:25])} IAS items...")
+            summaries.append(summarize(ias_items[:25]))
+
+        digest_text = "\n\n---\n\n".join(summaries) if summaries else "לא נמצאו חדשות חדשות היום."
 
         save_digest(new_items, digest_text)
 
