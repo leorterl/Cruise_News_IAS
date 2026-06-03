@@ -1021,6 +1021,32 @@ async function fetchArticleText(url) {
   } catch { return null; }
 }
 
+async function geminiGenerate(apiKey, requestBody) {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+  let lastErr;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    let resp;
+    try {
+      resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody)
+      });
+    } catch (err) {
+      lastErr = err;
+      if (attempt < 2) { await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt))); continue; }
+      throw err;
+    }
+    const data = await resp.json().catch(() => ({}));
+    if (resp.ok) return data;
+    const msg = data.error?.message || `API error ${resp.status}`;
+    if ([400, 401, 403, 404].includes(resp.status)) throw new Error(msg);
+    lastErr = new Error(msg);
+    if (attempt < 2) await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));
+  }
+  throw lastErr;
+}
+
 async function generateArticle(story, site) {
   const body = document.getElementById('modal-body');
 
@@ -1035,11 +1061,12 @@ async function generateArticle(story, site) {
 
   // Step 1: fetch full article text from each source
   body.innerHTML = `<div class="modal-generating"><div class="spinner"></div><p>קורא את הכתבות המקוריות...</p></div>`;
-  const sourceParts = [];
-  for (const src of story.sources) {
-    const fullText = await fetchArticleText(src.url);
-    sourceParts.push(`--- מקור: ${src.url} ---\n${fullText || '(לא ניתן לטעון תוכן)'}`);
-  }
+  const sourceParts = await Promise.all(
+    story.sources.map(async (src) => {
+      const fullText = await fetchArticleText(src.url);
+      return `--- מקור: ${src.url} ---\n${fullText || '(לא ניתן לטעון תוכן)'}`;
+    })
+  );
 
   body.innerHTML = `<div class="modal-generating"><div class="spinner"></div><p>כותב כתבה בעברית...</p></div>`;
 
@@ -1069,7 +1096,7 @@ TITLES:
 ‎3. [כותרת שלישית]
 
 DECK:
-‎[משפט תקציר אחד — עד 25 מילים]
+‎[2-3 משפטים — עד 60 מילים]
 
 ARTICLE:
 ‎[גוף הכתבה]
@@ -1081,14 +1108,12 @@ META:
 ‎[תיאור מטא עד 155 תווים]`;
 
   try {
-    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 2048 } })
+    const data = await geminiGenerate(apiKey, {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 4096 }
     });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error?.message || 'API error');
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    if (!text) throw new Error('לא התקבלה תשובה מ-Gemini');
     renderArticle(body, text, ending, story);
   } catch (err) {
     body.innerHTML = `<div class="empty"><h3>שגיאה</h3><p>${esc(err.message)}</p></div>`;
@@ -1228,7 +1253,7 @@ TITLES:
 ‎3. [כותרת שלישית]
 
 DECK:
-‎[משפט תקציר אחד — עד 25 מילים]
+‎[2-3 משפטים — עד 60 מילים]
 
 ARTICLE:
 ‎[גוף הכתבה]
@@ -1240,17 +1265,11 @@ META:
 ‎[תיאור מטא עד 155 תווים]`;
 
   try {
-    const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { temperature: 0.7, maxOutputTokens: 2048 },
-        tools: [{ url_context: {} }]
-      })
+    const data = await geminiGenerate(apiKey, {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
+      tools: [{ url_context: {} }]
     });
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data.error?.message || 'API error');
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
     if (!text) throw new Error('לא התקבלה תשובה מ-Gemini');
 
