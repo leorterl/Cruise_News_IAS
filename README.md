@@ -77,14 +77,14 @@ Each site in `config.yaml` is tagged with its type, CSS selectors for finding ar
 
 ## The AI Layer (`ai.py`)
 
-After crawling, all new articles are sent to **Gemini 2.0 Flash**. The prompt instructs it to:
+After crawling, all new articles are sent to **Gemini 3.5 Flash-Lite** (`gemini-3.5-flash-lite`) on Google Cloud **Agent Platform** (pay-as-you-go billing). The prompt instructs it to:
 
 - Group articles that cover the same story
 - Write a Hebrew summary (2–3 sentences) for each cluster
 - Format output as `🚢 Story title` blocks the dashboard can parse
 - Avoid AI writing patterns (no "pivotal moment", no hollow conclusions)
 
-The same Gemini API key is used for article generation in the browser (see Dashboard below).
+The same Agent Platform API key is used for article generation in the browser (see Dashboard below).
 
 ---
 
@@ -97,7 +97,7 @@ A single-file web app served via GitHub Pages. No server required.
 - **Stories tab** — AI-clustered digest for the day, sorted by source priority
 - **Sources tab** — all raw links collected that day, unprocessed, with search/filter
 - **7-day archive** — sidebar lets the editor navigate back up to 7 days
-- **Article generation** — click "✍️ כתוב כתבה" on any story → Gemini writes a full Hebrew article in ~15 seconds
+- **Article generation** — click "✍️ כתוב כתבה" on any story → Gemini 3.8 Flash (`gemini-3.8-flash`) writes a full Hebrew article in ~15 seconds
 - **Site selector** — choose IAS or CruiseIn before generating; each gets its own closing text automatically appended
 - **Copy buttons** — separate copy buttons for titles, deck, article body, tags, and meta description
 - **Source links** — original URLs shown in the article modal for fact-checking
@@ -119,7 +119,7 @@ A single-file web app served via GitHub Pages. No server required.
 ### Prerequisites
 
 - A GitHub account
-- A [Gemini API key](https://aistudio.google.com) (free tier works)
+- A Google Cloud **Agent Platform** API key — create one in [express mode](https://console.cloud.google.com/expressmode) and link a billing account (billed monthly for actual usage, no prepaid credits)
 - A Telegram bot token and chat ID
 
 ### 1. Fork or clone this repo
@@ -135,7 +135,7 @@ Go to **Settings → Secrets and Variables → Actions** and add:
 
 | Secret | Value |
 |---|---|
-| `GEMINI_API_KEY` | Your Gemini API key |
+| `GEMINI_API_KEY` | Your Agent Platform API key |
 | `TELEGRAM_BOT_TOKEN` | Your Telegram bot token |
 | `TELEGRAM_CHAT_ID` | Your Telegram chat/user ID |
 
@@ -189,7 +189,7 @@ To disable a site without removing it, add `enabled: false` to its entry.
 
 1. Open the dashboard at `https://YOUR_USERNAME.github.io/cruise-digest`
 2. Click **⚙️ הגדרות סיומות** (Settings)
-3. Paste your Gemini API key and save
+3. Paste your Agent Platform API key and save
 4. Optionally update the IAS and CruiseIn closing texts
 
 The Gemini key is stored only in your browser. It is never committed to the repo.
@@ -222,7 +222,7 @@ Clicking the button opens the dashboard directly.
 | `beautifulsoup4` | HTML parsing |
 | `feedparser` | RSS feed parsing |
 | `pyyaml` | Reading `config.yaml` |
-| `google-genai` | Gemini API (server-side summarization) |
+| `google-genai` | Gemini on Agent Platform (server-side summarization) |
 | `curl_cffi` | Stealth HTTP — bypasses bot detection |
 | `patchright` | Playwright fork — renders JS-heavy sites |
 
@@ -233,4 +233,4 @@ Clicking the button opens the dashboard directly.
 - **GitHub Actions cron** can run 15–30 minutes late. This is a GitHub limitation, not a bug. If timing is critical, a VPS with a real cron job is more reliable.
 - **Sites that block GitHub IPs** — some sites detect cloud provider IP ranges even with stealth mode. These will fail silently and log a warning.
 - **Playwright on GitHub Actions** adds ~3–5 minutes to each run for the Chromium install. This is expected.
-- **Article generation requires a Gemini API key** saved in the editor's browser. It does not use the server-side key from GitHub Secrets.
+- **Article generation requires the Agent Platform API key** saved in the editor's browser. It does not use the server-side key from GitHub Secrets.
